@@ -16,7 +16,7 @@ from customlayers import *
 from util import *
 
 
-class Model:
+class YearbookModel:
     ARCHITECTURES = ['alextnet', 'vgg16']
     FINE_TUNING_METHODS = ['end-to-end', 'phase-by-phase']
     get_model_function = {}
