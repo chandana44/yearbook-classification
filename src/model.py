@@ -69,8 +69,8 @@ class YearbookModel:
         else:
             return img_batch
 
-    def getModel(self, model_architecture, load_trained, model_weights_path, pretrained_weights_path,
-                 train_dir, val_dir, use_pretraining, fine_tuning_method):
+    def getModel(self, model_architecture='alexnet', load_trained=False, model_weights_path=None, pretrained_weights_path=None,
+                 train_dir=None, val_dir=None, use_pretraining=False, fine_tuning_method=None):
         """
 
         :param model_architecture: which architecture to use
