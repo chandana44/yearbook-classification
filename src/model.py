@@ -17,7 +17,7 @@ from util import *
 
 
 class Model:
-    ARCHITECTURES = ['alextnet', 'vgg16']
+    ARCHITECTURES = ['alexnet', 'vgg16']
     FINE_TUNING_METHODS = ['end-to-end', 'phase-by-phase']
     get_model_function = {}
 
@@ -25,7 +25,7 @@ class Model:
         self.get_model_function['alexnet'] = self.getAlexNet
         self.get_model_function['vgg16'] = self.getVGG16
 
-    def preprocess_image_batch(image_paths, img_size=None, crop_size=None, color_mode='rgb', out=None):
+    def preprocess_image_batch(self, image_paths, img_size=None, crop_size=None, color_mode='rgb', out=None):
         """
         Consistent preprocessing of images batches
 
@@ -69,8 +69,8 @@ class Model:
         else:
             return img_batch
 
-    def getModel(self, model_architecture, load_trained, model_weights_path, pretrained_weights_path,
-                 train_dir, val_dir, use_pretraining, fine_tuning_method):
+    def getModel(self, model_architecture, load_trained, model_weights_path, use_pretraining, pretrained_weights_path,
+                 train_dir, val_dir, fine_tuning_method):
         """
 
         :param model_architecture: which architecture to use
@@ -87,12 +87,13 @@ class Model:
         if model_architecture not in self.ARCHITECTURES:
             raise 'Invalid architecture name!'
         return self.get_model_function[model_architecture](load_trained, model_weights_path,
+                                                           use_pretraining,
                                                            pretrained_weights_path,
-                                                           train_dir, val_dir, use_pretraining,
+                                                           train_dir, val_dir,
                                                            fine_tuning_method)
 
-    def getAlexNet(self, load_trained, model_weights_path, pretrained_weights_path,
-                   train_dir, val_dir, use_pretraining, fine_tuning_method):
+    def getAlexNet(self, load_trained, model_weights_path, use_pretraining, pretrained_weights_path,
+                   train_dir, val_dir, fine_tuning_method):
         """
 
         :param load_trained: boolean (whether to just load the model from weights path)
@@ -108,25 +109,23 @@ class Model:
         train_data = listYearbook(True, False)
         valid_data = listYearbook(False, True)
 
-        train_images = [path.join(YEARBOOK_PATH, item[0]) for item in train_data]
+        train_images = [path.join(TRAIN_PATH, item[0]) for item in train_data]
         train_labels = []
         for item in train_data:
             label_vec = np.zeros(120)
-            label_vec[item[1]-1900] = 1
-            train_labels += label_vec
+            label_vec[int(item[1])-1900] = 1
+            train_labels.append(label_vec)
 
         valid_images = [path.join(YEARBOOK_PATH, item[0]) for item in valid_data]
         valid_labels = []
         for item in valid_data:
             label_vec = np.zeros(120)
-            label_vec[item[1]-1900] = 1
-            valid_labels += label_vec
+            label_vec[int(item[1])-1900] = 1
+            valid_labels.append(label_vec)
 
-        #preprocessing images
-        train_images = self.preprocess_image_batch(train_images, img_size=(256, 256), crop_size=(227, 227),
-                                                   color_mode="rgb")
-        valid_images = self.preprocess_image_batch(valid_images, img_size=(256, 256), crop_size=(227, 227),
-                                                   color_mode="rgb")
+        #preprocessing images preprocess_image_batch(image_paths, img_size=None, crop_size=None, color_mode='rgb', out=None):
+        processed_train_images = self.preprocess_image_batch(train_images, img_size=(256, 256), crop_size=(227, 227), color_mode="rgb")
+        #processes_valid_images = self.preprocess_image_batch(valid_images, img_size=(256, 256), crop_size=(227, 227), color_mode="rgb")
 
         inputs = Input(shape=(3, 227, 227))
         conv_1 = Convolution2D(96, 11, 11, subsample=(4, 4), activation='relu',
@@ -168,8 +167,8 @@ class Model:
 
         model = Model(input=inputs, output=prediction)
         if(use_pretraining):
-            if model_weights_path:
-                model.load_weights(model_weights_path)
+            if pretrained_weights_path:
+                model.load_weights(pretrained_weights_path)
 
         model.layers.pop()
         model.layers.pop()
@@ -177,15 +176,18 @@ class Model:
         last = Dense(110, name='dense_3')(last)
         prediction = Activation('softmax', name='softmax')(last)
         model = Model(model.input, prediction)
+        print 'compiling...'
         model.compile(optimizer="sgd", loss='mse')
-        model.fit(train_images, train_labels, batch_size = 384, nb_epoch = 100, verbose = 1)
+        print 'fitting...'
+        model.fit(processed_train_images, train_labels, batch_size = 384, nb_epoch = 1, verbose = 1)
+        print 'Done fitting'
         return model
 
     def get_l1_loss(self, x, y):
         return abs(np.argmax(x)-np.argmax(y))
 
-    def getVGG16(self, load_trained, model_weights_path, pretrained_weights_path, train_dir,
-                 val_dir, use_pretraining, fine_tuning_method):
+    def getVGG16(self, load_trained, model_weights_path, use_pretraining, pretrained_weights_path, train_dir,
+                 val_dir, fine_tuning_method):
         """
 
         :param load_trained: boolean (whether to just load the model from weights path)

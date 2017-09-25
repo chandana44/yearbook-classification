@@ -6,6 +6,8 @@ SRC_PATH = path.dirname(path.abspath(__file__))
 DATA_PATH = path.join(SRC_PATH, '..', 'data')
 
 YEARBOOK_PATH = path.join(DATA_PATH, "yearbook", "yearbook")
+YEARBOOK_PATH = path.join('','C:\Users\Chandu\Desktop\DeepLearning\project1\data\yearbook\yearbook')
+TRAIN_PATH = path.join('','C:\Users\Chandu\Desktop\DeepLearning\project1\data\yearbook\\smalltrain')
 STREETVIEW_PATH = path.join(DATA_PATH, "geo", "geo")
 
 import re
