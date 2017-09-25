@@ -1,18 +1,20 @@
+import numpy as np
+from keras import applications
+from keras import optimizers
 from keras.layers import Activation
-from keras.layers import Dense
-from keras.layers import Dropout
-from keras.layers import Flatten
+from keras.layers import Dropout, Flatten, Dense
 from keras.layers import Input
 from keras.layers import merge
-from keras.layers.convolutional import Convolution2D
 from keras.layers.convolutional import MaxPooling2D
 from keras.layers.convolutional import ZeroPadding2D
 from keras.models import Model
+from keras.preprocessing.image import ImageDataGenerator
 from scipy.misc import imread
 from scipy.misc import imresize
-from util import *
+
 from customlayers import *
-import numpy as np
+from util import *
+
 
 class Model:
     ARCHITECTURES = ['alextnet', 'vgg16']
@@ -179,6 +181,9 @@ class Model:
         model.fit(train_images, train_labels, batch_size = 384, nb_epoch = 100, verbose = 1)
         return model
 
+    def get_l1_loss(self, x, y):
+        return abs(np.argmax(x)-np.argmax(y))
+
     def getVGG16(self, load_trained, model_weights_path, pretrained_weights_path, train_dir,
                  val_dir, use_pretraining, fine_tuning_method):
         """
@@ -193,5 +198,43 @@ class Model:
         :return: Returns the AlexNet model according to the parameters provided
 
         """
+
+        batch_size = 16
+        img_height = 224
+        img_width = 224
+        num_epochs = 10
+        samples_per_epoch = 2000
+        nb_val_samples = 800
+
+        model = applications.VGG16(classes=120)
+
+        model.compile(optimizer=optimizers.SGD(lr=1e-4, momentum=0.9),
+                      loss=self.get_l1_loss)
+
+        train_datagen = ImageDataGenerator(
+            rescale=1. / 255,
+            shear_range=0.2,
+            zoom_range=0.2,
+            horizontal_flip=True)
+
+        test_datagen = ImageDataGenerator(rescale=1. / 255)
+
+        train_generator = train_datagen.flow_from_directory(
+            train_dir,
+            target_size=(img_height, img_width),
+            batch_size=batch_size)
+
+        validation_generator = test_datagen.flow_from_directory(
+            val_dir,
+            target_size=(img_height, img_width),
+            batch_size=batch_size)
+
+        # fine-tune the model
+        model.fit_generator(
+            train_generator,
+            samples_per_epoch=samples_per_epoch,
+            epochs=num_epochs,
+            validation_data=validation_generator,
+            nb_val_samples=nb_val_samples)
 
         return None
