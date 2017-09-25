@@ -1,7 +1,3 @@
-from convnetskeras.customlayers import crosschannelnormalization
-from convnetskeras.customlayers import Softmax4D
-from convnetskeras.customlayers import splittensor
-from convnetskeras.imagenet_tool import synset_to_dfs_ids
 from keras.layers import Activation
 from keras.layers import Dense
 from keras.layers import Dropout
@@ -12,10 +8,11 @@ from keras.layers.convolutional import Convolution2D
 from keras.layers.convolutional import MaxPooling2D
 from keras.layers.convolutional import ZeroPadding2D
 from keras.models import Model
-from keras.models import Sequential
-from keras.optimizers import SGD
 from scipy.misc import imread
 from scipy.misc import imresize
+from util import *
+from customlayers import *
+import numpy as np
 
 class Model:
     ARCHITECTURES = ['alextnet', 'vgg16']
@@ -25,6 +22,50 @@ class Model:
         self.get_model_function['alexnet'] = self.getAlexNet
         self.get_model_function['vgg16'] = self.getVGG16
 
+    def preprocess_image_batch(image_paths, img_size=None, crop_size=None, color_mode='rgb', out=None):
+        """
+        Consistent preprocessing of images batches
+
+        :param image_paths: iterable: images to process
+        :param crop_size: tuple: crop images if specified
+        :param img_size: tuple: resize images if specified
+        :param color_mode: Use rgb or change to bgr mode based on type of model you want to use
+        :param out: append output to this iterable if specified
+        """
+        img_list = []
+
+        for im_path in image_paths:
+            img = imread(im_path, mode='RGB')
+            if img_size:
+                img = imresize(img, img_size)
+
+            img = img.astype('float32')
+            # We normalize the colors (in RGB space) with the empirical means on the training set
+            img[:, :, 0] -= 123.68
+            img[:, :, 1] -= 116.779
+            img[:, :, 2] -= 103.939
+            # We permute the colors to get them in the BGR order
+            if color_mode == 'bgr':
+                img[:, :, [0, 1, 2]] = img[:, :, [2, 1, 0]]
+            img = img.transpose((2, 0, 1))
+
+            if crop_size:
+                img = img[:, (img_size[0] - crop_size[0]) // 2:(img_size[0] + crop_size[0]) // 2
+                , (img_size[1] - crop_size[1]) // 2:(img_size[1] + crop_size[1]) // 2]
+
+            img_list.append(img)
+
+        try:
+            img_batch = np.stack(img_list, axis=0)
+        except:
+            raise ValueError('when img_size and crop_size are None, images'
+                             ' in image_paths must have the same shapes.')
+
+        if out is not None and hasattr(out, 'append'):
+            out.append(img_batch)
+        else:
+            return img_batch
+
     def getModel(self, model_architecture, load_pretrained, weights_path, train_dir, val_dir, use_pre_training,
                  fine_tuning_method):
         if model_architecture not in self.ARCHITECTURES:
@@ -33,8 +74,31 @@ class Model:
                                                            use_pre_training, fine_tuning_method)
 
     def getAlexNet(self, load_pretrained, weights_path, train_dir, val_dir, use_pre_training, fine_tuning_method):
-        inputs = Input(shape=(3, 227, 227))
 
+        train_data = listYearbook(True, False)
+        valid_data = listYearbook(False, True)
+
+        train_images = [path.join(YEARBOOK_PATH, item[0]) for item in train_data]
+        train_labels = []
+        for item in train_data:
+            label_vec = np.zeros(120)
+            label_vec[item[1]-1900] = 1
+            train_labels += label_vec
+
+        valid_images = [path.join(YEARBOOK_PATH, item[0]) for item in valid_data]
+        valid_labels = []
+        for item in valid_data:
+            label_vec = np.zeros(120)
+            label_vec[item[1]-1900] = 1
+            valid_labels += label_vec
+
+        #preprocessing images
+        train_images = self.preprocess_image_batch(train_images, img_size=(256, 256), crop_size=(227, 227),
+                                                   color_mode="rgb")
+        valid_images = self.preprocess_image_batch(valid_images, img_size=(256, 256), crop_size=(227, 227),
+                                                   color_mode="rgb")
+
+        inputs = Input(shape=(3, 227, 227))
         conv_1 = Convolution2D(96, 11, 11, subsample=(4, 4), activation='relu',
                                name='conv_1')(inputs)
 
@@ -73,9 +137,9 @@ class Model:
         prediction = Activation('softmax', name='softmax')(dense_3)
 
         model = Model(input=inputs, output=prediction)
-
-        if weights_path:
-            model.load_weights(weights_path)
+        if(use_pre_training):
+            if weights_path:
+                model.load_weights(weights_path)
 
         model.layers.pop()
         model.layers.pop()
@@ -84,9 +148,8 @@ class Model:
         prediction = Activation('softmax', name='softmax')(last)
         model = Model(model.input, prediction)
         model.compile(optimizer="sgd", loss='mse')
-        model.fit(,, batch_size = 384, nb_epoch = NUM_EPOCHS, verbose = 1)
+        model.fit(train_images, train_labels, batch_size = 384, nb_epoch = 100, verbose = 1)
         return model
-        return None
 
     def getVGG16(self, load_pretrained, weights_path, train_dir, val_dir, use_pre_training, fine_tuning_method):
         return None
