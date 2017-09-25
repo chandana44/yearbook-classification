@@ -5,7 +5,7 @@ from run import *
 from util import *
 from model import *
 SRC_PATH = path.dirname(path.abspath(__file__))
-SRC_PATH = path.join('','C:\Users\Chandu\Desktop\DeepLearning\project1\src')
+#SRC_PATH = path.join('','C:\Users\Chandu\Desktop\DeepLearning\project1\src')
 DATA_PATH = path.join(SRC_PATH, '..', 'data')
 YEARBOOK_PATH = path.join(DATA_PATH, 'yearbook')
 YEARBOOK_VALID_PATH = path.join(YEARBOOK_PATH, 'valid')
@@ -121,8 +121,8 @@ def predictTestYearbookFromModel(model):
     output = open(YEARBOOK_TEST_LABEL_PATH, 'w')
     for image in test_list:
         image_path = path.join(YEARBOOK_TEST_PATH, image[0])
-        pred_year = np.argmax(model.predict(image_path))+1900
-        out_string = image[0] + '\t' + str(pred_year[0]) + '\n'
+        pred_year = np.argmax(model.predict(preprocess_image_batch([image_path],img_size=(256, 256), crop_size=(227, 227), color_mode="rgb")))+1900
+        out_string = str(pred_year) + '\n'
         output.write(out_string)
     output.close()
 
@@ -176,14 +176,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.dataset_type == 'yearbook':
         print("Yearbook")
-        model = Model()
-        trained_model = model.getModel("alexnet", False, "weights/alexnet_weights_trained1.h5" ,True, "weights/alexnet_weights.h5", "","","")
+        model = YearbookModel()
+        trained_model = model.getModel("alexnet", False, "weights/alexnet_weights_trained1.h5" ,True, "../weights/alexnet_weights.h5", "","","")
         if (args.type == 'valid'):
             #evaluateYearbook(Predictor)
             evaluateYearbookFromModel(trained_model)
         elif (args.type == 'test'):
             #predictTestYearbook(Predictor)
-            predictTestYearbookFromModel(model)
+            predictTestYearbookFromModel(trained_model)
         else:
             print("Unknown type '%s'", args.type)
     elif args.dataset_type == 'geolocation':
