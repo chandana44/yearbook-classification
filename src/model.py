@@ -19,18 +19,50 @@ from scipy.misc import imresize
 
 class Model:
     ARCHITECTURES = ['alextnet', 'vgg16']
+    FINE_TUNING_METHODS = ['end-to-end', 'phase-by-phase']
     get_model_function = {}
 
     def __init__(self):
         self.get_model_function['alexnet'] = self.getAlexNet
         self.get_model_function['vgg16'] = self.getVGG16
 
-    def getModel(self, model_architecture, load_pretrained, weights_path, train_dir, val_dir, use_pre_training,
-                 fine_tuning_method):
+    def getModel(self, model_architecture, load_trained, model_weights_path, pretrained_weights_path,
+                 train_dir, val_dir, use_pretraining, fine_tuning_method):
+        """
+
+        :param model_architecture: which architecture to use
+        :param load_trained: boolean (whether to just load the model from weights path)
+        :param model_weights_path: (final model weights path, if load_pretrained is true)
+        :param pretrained_weights_path: if load_trained is false and if use_pretraining is true, the path of weights to load for pre-training
+        :param train_dir: training data directory
+        :param val_dir: validation data directory
+        :param use_pretraining: boolean, whether to use pre-training or train from scratch
+        :param fine_tuning_method: whether to use end-to-end pre-training or phase-by-phase pre-training
+        :return: Returns the corresponding deepnet model
+
+        """
+
         if model_architecture not in self.ARCHITECTURES:
             raise 'Invalid architecture name!'
-        return self.get_model_function[model_architecture](load_pretrained, weights_path, train_dir, val_dir,
-                                                           use_pre_training, fine_tuning_method)
+        return self.get_model_function[model_architecture](load_trained, model_weights_path,
+                                                           pretrained_weights_path,
+                                                           train_dir, val_dir, use_pretraining,
+                                                           fine_tuning_method)
+
+    def getAlexNet(self, load_trained, model_weights_path, pretrained_weights_path,
+                   train_dir, val_dir, use_pretraining, fine_tuning_method):
+        """
+
+        :param load_trained: boolean (whether to just load the model from weights path)
+        :param model_weights_path: (final model weights path, if load_pretrained is true)
+        :param pretrained_weights_path: if load_trained is false and if use_pretraining is true, the path of weights to load for pre-training
+        :param train_dir: training data directory
+        :param val_dir: validation data directory
+        :param use_pretraining: boolean, whether to use pre-training or train from scratch
+        :param fine_tuning_method: whether to use end-to-end pre-training or phase-by-phase pre-training
+        :return: Returns the AlexNet model according to the parameters provided
+
+        """
 
     def getAlexNet(self, load_pretrained, weights_path, train_dir, val_dir, use_pre_training, fine_tuning_method):
         inputs = Input(shape=(3, 227, 227))
@@ -86,7 +118,20 @@ class Model:
         model.compile(optimizer="sgd", loss='mse')
         model.fit(,, batch_size = 384, nb_epoch = NUM_EPOCHS, verbose = 1)
         return model
-        return None
 
-    def getVGG16(self, load_pretrained, weights_path, train_dir, val_dir, use_pre_training, fine_tuning_method):
+    def getVGG16(self, load_trained, model_weights_path, pretrained_weights_path, train_dir,
+                 val_dir, use_pretraining, fine_tuning_method):
+        """
+
+        :param load_trained: boolean (whether to just load the model from weights path)
+        :param model_weights_path: (final model weights path, if load_pretrained is true)
+        :param pretrained_weights_path: if load_trained is false and if use_pretraining is true, the path of weights to load for pre-training
+        :param train_dir: training data directory
+        :param val_dir: validation data directory
+        :param use_pretraining: boolean, whether to use pre-training or train from scratch
+        :param fine_tuning_method: whether to use end-to-end pre-training or phase-by-phase pre-training
+        :return: Returns the AlexNet model according to the parameters provided
+
+        """
+
         return None
