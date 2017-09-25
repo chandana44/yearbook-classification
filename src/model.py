@@ -25,7 +25,7 @@ class YearbookModel:
         self.get_model_function['alexnet'] = self.getAlexNet
         self.get_model_function['vgg16'] = self.getVGG16
 
-    def preprocess_image_batch(image_paths, img_size=None, crop_size=None, color_mode='rgb', out=None):
+    def preprocess_image_batch(self, image_paths, img_size=None, crop_size=None, color_mode='rgb', out=None):
         """
         Consistent preprocessing of images batches
 
