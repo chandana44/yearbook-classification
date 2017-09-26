@@ -13,7 +13,7 @@ SRC_PATH = path.dirname(path.abspath(__file__))
 DATA_PATH = path.join(SRC_PATH, '..', 'data')
 
 YEARBOOK_PATH = path.join(DATA_PATH, "yearbook")
-YEARBOOK_TXT_PREFIX = path.join(YEARBOOK_PATH, "yearbook_sample")
+YEARBOOK_TXT_PREFIX = path.join(YEARBOOK_PATH, "yearbook")
 
 YEARBOOK_TRAIN_PATH = path.join(YEARBOOK_PATH, 'train')
 YEARBOOK_VALID_PATH = path.join(YEARBOOK_PATH, 'valid')
