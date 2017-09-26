@@ -22,8 +22,9 @@ class YearbookModel:
         self.get_model_function['alexnet'] = self.getAlexNet
         self.get_model_function['vgg16'] = self.getVGG16
 
-    def getModel(self, model_architecture, load_trained, model_weights_path, use_pretraining, pretrained_weights_path,
-                 train_dir, val_dir, fine_tuning_method):
+    def getModel(self, model_architecture='alexnet', load_trained=False, model_weights_path=None, use_pretraining=False,
+                 pretrained_weights_path=None,
+                 train_dir=None, val_dir=None, fine_tuning_method=None):
         """
 
         :param model_architecture: which architecture to use
