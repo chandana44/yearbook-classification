@@ -1,5 +1,7 @@
 # Feel free to modify this to your needs. We will not rely on your util.py
+import numpy as np
 from os import path
+import re
 from scipy.misc import imread
 from scipy.misc import imresize
 import numpy as np

@@ -6,7 +6,6 @@ from model import *
 from run import *
 
 SRC_PATH = path.dirname(path.abspath(__file__))
-# SRC_PATH = path.join('','C:\Users\Chandu\Desktop\DeepLearning\project1\src')
 DATA_PATH = path.join(SRC_PATH, '..', 'data')
 YEARBOOK_PATH = path.join(DATA_PATH, 'yearbook')
 YEARBOOK_VALID_PATH = path.join(YEARBOOK_PATH, 'valid')

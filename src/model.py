@@ -1,7 +1,7 @@
-import numpy as np
 from keras import applications
 from keras import optimizers
-from keras.layers import Activation
+from keras.preprocessing.image import ImageDataGenerator
+from keras.layers import Activation, Convolution2D
 from keras.layers import Dropout, Flatten, Dense
 from keras.layers import Input
 from keras.layers import merge
@@ -9,9 +9,8 @@ from keras.layers.convolutional import MaxPooling2D
 from keras.layers.convolutional import ZeroPadding2D
 from keras.models import Model
 from keras.models import load_model
-from keras.preprocessing.image import ImageDataGenerator
 
-from customlayers import *
+from customlayers import crosschannelnormalization, splittensor
 from util import *
 
 
@@ -130,7 +129,7 @@ class YearbookModel:
             else:
                 raise Exception('use_pretraining is true but pretrained_weights_path is not specified!')
 
-        # Removing the final dense_3 layer
+        # Removing the final dense_3 layer and adding the layers with correct classification size
         model.layers.pop()
         model.layers.pop()
 
