@@ -61,7 +61,7 @@ def evaluateYearbookFromModel(model):
 
     total_count = len(val_list)
     l1_dist = 0.0
-    print("Total validation data: ", total_count)
+    print(get_time_string() + "Total validation data: ", total_count)
     for ground_truth_entry in val_list:
         full_file_path = path.join(YEARBOOK_VALID_PATH, ground_truth_entry[0])
         pred_year = np.argmax(model.predict(preprocess_image_batch([full_file_path],
@@ -72,7 +72,7 @@ def evaluateYearbookFromModel(model):
         l1_dist += abs(pred_year - truth_year)
 
     l1_dist /= total_count
-    print("L1 distance for validation set: ", l1_dist)
+    print(get_time_string() + "L1 distance for validation set: ", l1_dist)
     return l1_dist
 
 
@@ -84,7 +84,7 @@ def evaluateYearbook(Predictor):
 
     total_count = len(test_list)
     l1_dist = 0.0
-    print("Total validation data", total_count)
+    print(get_time_string() + "Total validation data", total_count)
     count = 0
     for image_gr_truth in test_list:
         image_path = path.join(YEARBOOK_VALID_PATH, image_gr_truth[0])
@@ -94,7 +94,7 @@ def evaluateYearbook(Predictor):
         count += 1
 
     l1_dist /= total_count
-    print("L1 distance", l1_dist)
+    print(get_time_string() + "L1 distance", l1_dist)
     return l1_dist
 
 
@@ -106,14 +106,14 @@ def evaluateStreetview(Predictor):
 
     total_count = len(test_list)
     l1_dist = 0
-    print("Total validation data", total_count)
+    print(get_time_string() + "Total validation data", total_count)
     for image_gr_truth in test_list:
         image_path = path.join(STREETVIEW_VALID_PATH, image_gr_truth[0])
         pred_lat, pred_lon = predictor.predict(image_path)
         truth_lat, truth_lon = float(image_gr_truth[1]), float(image_gr_truth[2])
         l1_dist += dist(pred_lat, pred_lon, truth_lat, truth_lon)
     l1_dist /= total_count
-    print("L1 distance", l1_dist)
+    print(get_time_string() + "L1 distance", l1_dist)
     return l1_dist
 
 
@@ -124,7 +124,7 @@ def predictTestYearbookFromModel(model):
     predictor.DATASET_TYPE = 'yearbook'
 
     total_count = len(test_list)
-    print("Total test data: ", total_count)
+    print(get_time_string() + "Total test data: ", total_count)
 
     test_images = [path.join(YEARBOOK_TEST_PATH, item[0]) for item in test_list]
     processed_test_images = preprocess_image_batch(test_images, img_size=(256, 256), crop_size=(227, 227),
@@ -145,7 +145,7 @@ def predictTestYearbook(Predictor):
     predictor.DATASET_TYPE = 'yearbook'
 
     total_count = len(test_list)
-    print("Total test data: ", total_count)
+    print(get_time_string() + "Total test data: ", total_count)
 
     output = open(YEARBOOK_TEST_LABEL_PATH, 'w')
     for image in test_list:
@@ -163,7 +163,7 @@ def predictTestStreetview(Predictor):
     predictor.DATASET_TYPE = 'geolocation'
 
     total_count = len(test_list)
-    print("Total test data", total_count)
+    print(get_time_string() + "Total test data", total_count)
 
     output = open(STREETVIEW_TEST_LABEL_PATH, 'w')
     for image in test_list:
