@@ -1,20 +1,23 @@
 # Feel free to modify this to your needs. We will not rely on your util.py
+import numpy as np
 from os import path
+import re
 from scipy.misc import imread
 from scipy.misc import imresize
-import numpy as np
 
 # If you want this to work do not move this file
 SRC_PATH = path.dirname(path.abspath(__file__))
 DATA_PATH = path.join(SRC_PATH, '..', 'data')
-
-YEARBOOK_PATH = path.join(DATA_PATH, "yearbook", "yearbook")
-#YEARBOOK_PATH = path.join('','C:\Users\Chandu\Desktop\DeepLearning\project1\data\yearbook\yearbook')
-#TRAIN_PATH = path.join('','C:\Users\Chandu\Desktop\DeepLearning\project1\data\yearbook\\smalltrain')
-TRAIN_PATH = path.join(YEARBOOK_PATH, 'train')
-STREETVIEW_PATH = path.join(DATA_PATH, "geo", "geo")
-
-import re
+YEARBOOK_PATH = path.join(DATA_PATH, 'yearbook', '')
+YEARBOOK_TRAIN_PATH = path.join(YEARBOOK_PATH, 'train')
+YEARBOOK_VALID_PATH = path.join(YEARBOOK_PATH, 'valid')
+YEARBOOK_TEST_PATH = path.join(YEARBOOK_PATH, 'test')
+YEARBOOK_TEST_LABEL_PATH = path.join(SRC_PATH, '..', 'output', 'yearbook_test_label.txt')
+STREETVIEW_PATH = path.join(DATA_PATH, 'geo', '')
+STREETVIEW_VALID_PATH = path.join(STREETVIEW_PATH, 'train')
+STREETVIEW_VALID_PATH = path.join(STREETVIEW_PATH, 'valid')
+STREETVIEW_TEST_PATH = path.join(STREETVIEW_PATH, 'test')
+STREETVIEW_TEST_LABEL_PATH = path.join(SRC_PATH, '..', 'output', 'geo_test_label.txt')
 
 yb_r = re.compile("(\d\d\d\d)_(.*)_(.*)_(.*)_(.*)")
 sv_r = re.compile("([+-]?\d*\.\d*)_([+-]?\d*\.\d*)_\d*_-004")
@@ -36,28 +39,28 @@ def label(filename):
 #   train=False, valid=True will only list validation files (for testing)
 def listYearbook(train=True, valid=True):
     r = []
-    if train: r = r + [n.strip().split('\t') for n in open(YEARBOOK_PATH + '_train.txt', 'r')]
-    if valid: r = r + [n.strip().split('\t') for n in open(YEARBOOK_PATH + '_valid.txt', 'r')]
+    if train: r = r + [n.strip().split('\t') for n in open(YEARBOOK_PATH + 'yearbook_train.txt', 'r')]
+    if valid: r = r + [n.strip().split('\t') for n in open(YEARBOOK_PATH + 'yearbook_valid.txt', 'r')]
     return r
 
 
 # List all the streetview files
 def listStreetView(train=True, valid=True):
     r = []
-    if train: r = r + [n.strip().split('\t') for n in open(STREETVIEW_PATH + '_train.txt', 'r')]
-    if valid: r = r + [n.strip().split('\t') for n in open(STREETVIEW_PATH + '_valid.txt', 'r')]
+    if train: r = r + [n.strip().split('\t') for n in open(STREETVIEW_PATH + 'geo_train.txt', 'r')]
+    if valid: r = r + [n.strip().split('\t') for n in open(STREETVIEW_PATH + 'geo_valid.txt', 'r')]
     return r
 
 
 def testListYearbook():
     r = []
-    r = r + [n.strip().split('\t') for n in open(YEARBOOK_PATH + '_test.txt', 'r')]
+    r = r + [n.strip().split('\t') for n in open(YEARBOOK_PATH + 'yearbook_test.txt', 'r')]
     return r
 
 
 def testListStreetView():
     r = []
-    r = r + [n.strip().split('\t') for n in open(STREETVIEW_PATH + '_test.txt', 'r')]
+    r = r + [n.strip().split('\t') for n in open(STREETVIEW_PATH + 'geo_test.txt', 'r')]
     return r
 
 

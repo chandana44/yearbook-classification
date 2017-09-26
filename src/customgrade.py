@@ -1,20 +1,8 @@
 from __future__ import print_function
-from os import path
 from math import sin, cos, atan2, sqrt, pi
+from model import *
 from run import *
 from util import *
-from model import *
-SRC_PATH = path.dirname(path.abspath(__file__))
-#SRC_PATH = path.join('','C:\Users\Chandu\Desktop\DeepLearning\project1\src')
-DATA_PATH = path.join(SRC_PATH, '..', 'data')
-YEARBOOK_PATH = path.join(DATA_PATH, 'yearbook')
-YEARBOOK_VALID_PATH = path.join(YEARBOOK_PATH, 'valid')
-YEARBOOK_TEST_PATH = path.join(YEARBOOK_PATH, 'test')
-YEARBOOK_TEST_LABEL_PATH = path.join(SRC_PATH, '..', 'output', 'yearbook_test_label.txt')
-STREETVIEW_PATH = path.join(DATA_PATH, 'geo')
-STREETVIEW_VALID_PATH = path.join(STREETVIEW_PATH, 'valid')
-STREETVIEW_TEST_PATH = path.join(STREETVIEW_PATH, 'test')
-STREETVIEW_TEST_LABEL_PATH = path.join(SRC_PATH, '..', 'output', 'geo_test_label.txt')
 
 
 def numToRadians(x):
@@ -48,6 +36,7 @@ def dist(lat1, lon1, lat2, lon2):
     d = EARTH_RADIUS * c
     return d
 
+
 # Evaluate L1 distance on valid data for yearbook dataset
 def evaluateYearbookFromModel(model):
     test_list = util.listYearbook(False, True)
@@ -60,7 +49,7 @@ def evaluateYearbookFromModel(model):
     count = 0
     for image_gr_truth in test_list:
         image_path = path.join(YEARBOOK_VALID_PATH, image_gr_truth[0])
-        pred_year = np.argmax(model.predict(image_path))+1900
+        pred_year = np.argmax(model.predict(image_path)) + 1900
         truth_year = int(image_gr_truth[1])
         l1_dist += abs(pred_year[0] - truth_year)
         count = count + 1
@@ -68,6 +57,7 @@ def evaluateYearbookFromModel(model):
     l1_dist /= total_count
     print("L1 distance", l1_dist)
     return l1_dist
+
 
 # Evaluate L1 distance on valid data for yearbook dataset
 def evaluateYearbook(Predictor):
@@ -109,6 +99,7 @@ def evaluateStreetview(Predictor):
     print("L1 distance", l1_dist)
     return l1_dist
 
+
 # Predict label for test data on yearbook dataset
 def predictTestYearbookFromModel(model):
     test_list = util.testListYearbook()
@@ -121,7 +112,8 @@ def predictTestYearbookFromModel(model):
     output = open(YEARBOOK_TEST_LABEL_PATH, 'w')
     for image in test_list:
         image_path = path.join(YEARBOOK_TEST_PATH, image[0])
-        pred_year = np.argmax(model.predict(preprocess_image_batch([image_path],img_size=(256, 256), crop_size=(227, 227), color_mode="rgb")))+1900
+        pred_year = np.argmax(model.predict(
+            preprocess_image_batch([image_path], img_size=(256, 256), crop_size=(227, 227), color_mode="rgb"))) + 1900
         out_string = str(pred_year) + '\n'
         output.write(out_string)
     output.close()
@@ -164,7 +156,6 @@ def predictTestStreetview(Predictor):
 
 
 if __name__ == "__main__":
-    import importlib
     from argparse import ArgumentParser
 
     parser = ArgumentParser("Evaluate a model on the validation set")
@@ -177,12 +168,11 @@ if __name__ == "__main__":
     if args.dataset_type == 'yearbook':
         print("Yearbook")
         model = YearbookModel()
-        trained_model = model.getModel("alexnet", False, "weights/alexnet_weights_trained1.h5" ,True, "../weights/alexnet_weights.h5", "","","")
+        trained_model = model.getModel("alexnet", False, "weights/alexnet_weights_trained1.h5", True,
+                                       "../weights/alexnet_weights.h5", "", "", "")
         if (args.type == 'valid'):
-            #evaluateYearbook(Predictor)
             evaluateYearbookFromModel(trained_model)
         elif (args.type == 'test'):
-            #predictTestYearbook(Predictor)
             predictTestYearbookFromModel(trained_model)
         else:
             print("Unknown type '%s'", args.type)

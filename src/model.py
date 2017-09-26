@@ -9,9 +9,9 @@ from keras.layers.convolutional import MaxPooling2D
 from keras.layers.convolutional import ZeroPadding2D
 from keras.models import Model
 from keras.preprocessing.image import ImageDataGenerator
-
 from customlayers import *
 from util import *
+
 
 class YearbookModel:
     ARCHITECTURES = ['alexnet', 'vgg16']
@@ -63,26 +63,25 @@ class YearbookModel:
         train_data = listYearbook(True, False)
         valid_data = listYearbook(False, True)
 
-        train_images = [path.join(TRAIN_PATH, item[0]) for item in train_data]
+        train_images = [path.join(YEARBOOK_TRAIN_PATH, item[0]) for item in train_data]
         train_labels = []
-        #train_labels = np.array([len(train_images),120])
         for item in train_data:
             label_vec = np.zeros(120)
-            label_vec[int(item[1])-1900] = 1
+            label_vec[int(item[1]) - 1900] = 1
             train_labels.append(label_vec)
 
-        print 'train labels shape:', len(train_labels)
-
-        valid_images = [path.join(YEARBOOK_PATH, item[0]) for item in valid_data]
+        valid_images = [path.join(YEARBOOK_VALID_PATH, item[0]) for item in valid_data]
         valid_labels = []
         for item in valid_data:
             label_vec = np.zeros(120)
-            label_vec[int(item[1])-1900] = 1
+            label_vec[int(item[1]) - 1900] = 1
             valid_labels.append(label_vec)
 
-        #preprocessing images preprocess_image_batch(image_paths, img_size=None, crop_size=None, color_mode='rgb', out=None):
-        processed_train_images = preprocess_image_batch(train_images, img_size=(256, 256), crop_size=(227, 227), color_mode="rgb")
-        #processes_valid_images = preprocess_image_batch(valid_images, img_size=(256, 256), crop_size=(227, 227), color_mode="rgb")
+        # preprocessing images
+        processed_train_images = preprocess_image_batch(train_images, img_size=(256, 256), crop_size=(227, 227),
+                                                        color_mode="rgb")
+        processes_valid_images = preprocess_image_batch(valid_images, img_size=(256, 256), crop_size=(227, 227),
+                                                        color_mode="rgb")
 
         inputs = Input(shape=(3, 227, 227))
         conv_1 = Convolution2D(96, 11, 11, subsample=(4, 4), activation='relu',
@@ -123,25 +122,27 @@ class YearbookModel:
         prediction = Activation('softmax', name='softmax')(dense_3)
 
         model = Model(input=inputs, output=prediction)
-        if(use_pretraining):
+        if (use_pretraining):
             if pretrained_weights_path:
                 model.load_weights(pretrained_weights_path)
 
+        # removing the last 2 layers and adding the layers with correct classification size
         model.layers.pop()
         model.layers.pop()
         last = model.layers[-1].output
         last = Dense(120, name='dense_3')(last)
         prediction = Activation('softmax', name='softmax')(last)
         model = Model(model.input, prediction)
+
         print 'compiling...'
         model.compile(optimizer="sgd", loss='mse')
         print 'fitting...'
-        model.fit(processed_train_images, np.array(train_labels), batch_size = 10, nb_epoch = 1, verbose = 1)
-        print 'Done fitting'
+        model.fit(processed_train_images, np.array(train_labels), batch_size=384, nb_epoch=100, verbose=1,
+                  validation_data=(processes_valid_images, np.array(valid_labels)))
         return model
 
     def get_l1_loss(self, x, y):
-        return abs(np.argmax(x)-np.argmax(y))
+        return abs(np.argmax(x) - np.argmax(y))
 
     def getVGG16(self, load_trained, model_weights_path, use_pretraining, pretrained_weights_path, train_dir,
                  val_dir, fine_tuning_method):
