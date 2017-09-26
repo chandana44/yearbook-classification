@@ -1,11 +1,12 @@
 from __future__ import print_function
-from os import path
+
 from math import sin, cos, atan2, sqrt, pi
-from run import *
-from util import *
+
 from model import *
+from run import *
+
 SRC_PATH = path.dirname(path.abspath(__file__))
-#SRC_PATH = path.join('','C:\Users\Chandu\Desktop\DeepLearning\project1\src')
+# SRC_PATH = path.join('','C:\Users\Chandu\Desktop\DeepLearning\project1\src')
 DATA_PATH = path.join(SRC_PATH, '..', 'data')
 YEARBOOK_PATH = path.join(DATA_PATH, 'yearbook')
 YEARBOOK_VALID_PATH = path.join(YEARBOOK_PATH, 'valid')
@@ -15,6 +16,10 @@ STREETVIEW_PATH = path.join(DATA_PATH, 'geo')
 STREETVIEW_VALID_PATH = path.join(STREETVIEW_PATH, 'valid')
 STREETVIEW_TEST_PATH = path.join(STREETVIEW_PATH, 'test')
 STREETVIEW_TEST_LABEL_PATH = path.join(SRC_PATH, '..', 'output', 'geo_test_label.txt')
+
+ALEXNET_ARCHITECTURE = 'alexnet'
+CHECKPOINT_BASE_DIR = '../checkpoint/'
+ALEXNET_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/alexnet_weights.h5'
 
 
 def numToRadians(x):
@@ -48,26 +53,29 @@ def dist(lat1, lon1, lat2, lon2):
     d = EARTH_RADIUS * c
     return d
 
+
 # Evaluate L1 distance on valid data for yearbook dataset
 def evaluateYearbookFromModel(model):
-    test_list = util.listYearbook(False, True)
+    val_list = util.listYearbook(False, True)
     predictor = Predictor()
     predictor.DATASET_TYPE = 'yearbook'
 
-    total_count = len(test_list)
+    total_count = len(val_list)
     l1_dist = 0.0
-    print("Total validation data", total_count)
-    count = 0
-    for image_gr_truth in test_list:
-        image_path = path.join(YEARBOOK_VALID_PATH, image_gr_truth[0])
-        pred_year = np.argmax(model.predict(image_path))+1900
-        truth_year = int(image_gr_truth[1])
-        l1_dist += abs(pred_year[0] - truth_year)
-        count = count + 1
+    print("Total validation data: ", total_count)
+    for ground_truth_entry in val_list:
+        full_file_path = path.join(YEARBOOK_VALID_PATH, ground_truth_entry[0])
+        pred_year = np.argmax(model.predict(preprocess_image_batch([full_file_path],
+                                                                   img_size=(256, 256),
+                                                                   crop_size=(227, 227),
+                                                                   color_mode="rgb"))) + 1900
+        truth_year = int(ground_truth_entry[1])
+        l1_dist += abs(pred_year - truth_year)
 
     l1_dist /= total_count
-    print("L1 distance", l1_dist)
+    print("L1 distance for validation set: ", l1_dist)
     return l1_dist
+
 
 # Evaluate L1 distance on valid data for yearbook dataset
 def evaluateYearbook(Predictor):
@@ -84,7 +92,7 @@ def evaluateYearbook(Predictor):
         pred_year = predictor.predict(image_path)
         truth_year = int(image_gr_truth[1])
         l1_dist += abs(pred_year[0] - truth_year)
-        count = count + 1
+        count += 1
 
     l1_dist /= total_count
     print("L1 distance", l1_dist)
@@ -109,6 +117,7 @@ def evaluateStreetview(Predictor):
     print("L1 distance", l1_dist)
     return l1_dist
 
+
 # Predict label for test data on yearbook dataset
 def predictTestYearbookFromModel(model):
     test_list = util.testListYearbook()
@@ -118,10 +127,13 @@ def predictTestYearbookFromModel(model):
     total_count = len(test_list)
     print("Total test data: ", total_count)
 
+    test_images = [path.join(YEARBOOK_TEST_PATH, item[0]) for item in test_list]
+    processed_test_images = preprocess_image_batch(test_images, img_size=(256, 256), crop_size=(227, 227),
+                                                   color_mode="rgb")
+
     output = open(YEARBOOK_TEST_LABEL_PATH, 'w')
-    for image in test_list:
-        image_path = path.join(YEARBOOK_TEST_PATH, image[0])
-        pred_year = np.argmax(model.predict(preprocess_image_batch([image_path],img_size=(256, 256), crop_size=(227, 227), color_mode="rgb")))+1900
+    for image in processed_test_images:
+        pred_year = np.argmax(model.predict(np.stack([image], axis=0))) + 1900
         out_string = str(pred_year) + '\n'
         output.write(out_string)
     output.close()
@@ -164,7 +176,6 @@ def predictTestStreetview(Predictor):
 
 
 if __name__ == "__main__":
-    import importlib
     from argparse import ArgumentParser
 
     parser = ArgumentParser("Evaluate a model on the validation set")
@@ -174,26 +185,30 @@ if __name__ == "__main__":
                         help="Dataset: valid/test", required=True)
 
     args = parser.parse_args()
+    print(get_time_string() + 'Operating on ' + args.dataset_type + ' dataset..')
+
     if args.dataset_type == 'yearbook':
-        print("Yearbook")
         model = YearbookModel()
-        trained_model = model.getModel("alexnet", False, "weights/alexnet_weights_trained1.h5" ,True, "../weights/alexnet_weights.h5", "","","")
-        if (args.type == 'valid'):
-            #evaluateYearbook(Predictor)
+        trained_model = model.getModel(model_architecture=ALEXNET_ARCHITECTURE, load_saved_model=False,
+                                       model_save_path=CHECKPOINT_BASE_DIR + 'alexnet_saved_model1.h5',
+                                       use_pretraining=True,
+                                       pretrained_weights_path=ALEXNET_PRETRAINED_WEIGHT_PATH,
+                                       train_dir=None, val_dir=None, fine_tuning_method=None)
+        if args.type == 'valid':
+            # evaluateYearbook(Predictor)
             evaluateYearbookFromModel(trained_model)
-        elif (args.type == 'test'):
-            #predictTestYearbook(Predictor)
+        elif args.type == 'test':
+            # predictTestYearbook(Predictor)
             predictTestYearbookFromModel(trained_model)
         else:
-            print("Unknown type '%s'", args.type)
+            print(get_time_string() + "Unknown type '%s'", args.type)
     elif args.dataset_type == 'geolocation':
-        print("Geolocation")
-        if (args.type == 'valid'):
+        if args.type == 'valid':
             evaluateStreetview(Predictor)
-        elif (args.type == 'test'):
+        elif args.type == 'test':
             predictTestStreetview(Predictor)
         else:
-            print("Unknown type '%s'", args.type)
+            print(get_time_string() + "Unknown type '%s'", args.type)
     else:
-        print("Unknown dataset type '%s'", Predictor.DATASET_TYPE)
+        print(get_time_string() + "Unknown dataset type '%s'", Predictor.DATASET_TYPE)
         exit(1)

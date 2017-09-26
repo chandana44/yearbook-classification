@@ -8,10 +8,12 @@ from keras.layers import merge
 from keras.layers.convolutional import MaxPooling2D
 from keras.layers.convolutional import ZeroPadding2D
 from keras.models import Model
+from keras.models import load_model
 from keras.preprocessing.image import ImageDataGenerator
 
 from customlayers import *
 from util import *
+
 
 class YearbookModel:
     ARCHITECTURES = ['alexnet', 'vgg16']
@@ -22,13 +24,14 @@ class YearbookModel:
         self.get_model_function['alexnet'] = self.getAlexNet
         self.get_model_function['vgg16'] = self.getVGG16
 
-    def getModel(self, model_architecture, load_trained, model_weights_path, use_pretraining, pretrained_weights_path,
-                 train_dir, val_dir, fine_tuning_method):
+    def getModel(self, model_architecture='alexnet', load_saved_model=False, model_save_path=None, use_pretraining=False,
+                 pretrained_weights_path=None, train_dir=None, val_dir=None, fine_tuning_method='end-to-end'):
+
         """
 
         :param model_architecture: which architecture to use
-        :param load_trained: boolean (whether to just load the model from weights path)
-        :param model_weights_path: (final model weights path, if load_pretrained is true)
+        :param load_saved_model: boolean (whether to just load the model from weights path)
+        :param model_save_path: (final model weights path, if load_pretrained is true)
         :param pretrained_weights_path: if load_trained is false and if use_pretraining is true, the path of weights to load for pre-training
         :param train_dir: training data directory
         :param val_dir: validation data directory
@@ -37,20 +40,22 @@ class YearbookModel:
         :return: Returns the corresponding deepnet model
 
         """
+
         if model_architecture not in self.ARCHITECTURES:
-            raise 'Invalid architecture name!'
-        return self.get_model_function[model_architecture](load_trained, model_weights_path,
+            raise Exception('Invalid architecture name!')
+
+        return self.get_model_function[model_architecture](load_saved_model, model_save_path,
                                                            use_pretraining,
                                                            pretrained_weights_path,
                                                            train_dir, val_dir,
                                                            fine_tuning_method)
 
-    def getAlexNet(self, load_trained, model_weights_path, use_pretraining, pretrained_weights_path,
+    def getAlexNet(self, load_saved_model, model_save_path, use_pretraining, pretrained_weights_path,
                    train_dir, val_dir, fine_tuning_method):
         """
 
-        :param load_trained: boolean (whether to just load the model from weights path)
-        :param model_weights_path: (final model weights path, if load_pretrained is true)
+        :param load_saved_model: boolean (whether to just load the model from weights path)
+        :param model_save_path: (final model weights path, if load_pretrained is true)
         :param pretrained_weights_path: if load_trained is false and if use_pretraining is true, the path of weights to load for pre-training
         :param train_dir: training data directory
         :param val_dir: validation data directory
@@ -59,30 +64,26 @@ class YearbookModel:
         :return: Returns the AlexNet model according to the parameters provided
 
         """
-        print 'using AlexNet...'
+
+        print(get_time_string() + 'Creating AlextNet model..')
+
+        if load_saved_model:
+            if model_save_path is None:
+                raise Exception('Unable to load trained model as model_weights_path is None!')
+            model = load_model(model_save_path)
+            return model
+
         train_data = listYearbook(True, False)
         valid_data = listYearbook(False, True)
 
-        train_images = [path.join(TRAIN_PATH, item[0]) for item in train_data]
-        train_labels = []
-        #train_labels = np.array([len(train_images),120])
-        for item in train_data:
-            label_vec = np.zeros(120)
-            label_vec[int(item[1])-1900] = 1
-            train_labels.append(label_vec)
+        train_images, train_labels = get_data_and_labels(train_data, YEARBOOK_TRAIN_PATH)
+        valid_images, valid_labels = get_data_and_labels(valid_data, YEARBOOK_VALID_PATH)
 
-        print 'train labels shape:', len(train_labels)
-
-        valid_images = [path.join(YEARBOOK_PATH, item[0]) for item in valid_data]
-        valid_labels = []
-        for item in valid_data:
-            label_vec = np.zeros(120)
-            label_vec[int(item[1])-1900] = 1
-            valid_labels.append(label_vec)
-
-        #preprocessing images preprocess_image_batch(image_paths, img_size=None, crop_size=None, color_mode='rgb', out=None):
-        processed_train_images = preprocess_image_batch(train_images, img_size=(256, 256), crop_size=(227, 227), color_mode="rgb")
-        #processes_valid_images = preprocess_image_batch(valid_images, img_size=(256, 256), crop_size=(227, 227), color_mode="rgb")
+        # Preprocessing images
+        processed_train_images = preprocess_image_batch(image_paths=train_images, img_size=(256, 256),
+                                                        crop_size=(227, 227), color_mode="rgb")
+        processed_valid_images = preprocess_image_batch(image_paths=valid_images, img_size=(256, 256),
+                                                        crop_size=(227, 227), color_mode="rgb")
 
         inputs = Input(shape=(3, 227, 227))
         conv_1 = Convolution2D(96, 11, 11, subsample=(4, 4), activation='relu',
@@ -92,9 +93,9 @@ class YearbookModel:
         conv_2 = crosschannelnormalization(name='convpool_1')(conv_2)
         conv_2 = ZeroPadding2D((2, 2))(conv_2)
         conv_2 = merge([
-            Convolution2D(128, 5, 5, activation='relu', name='conv_2_' + str(i + 1))(
-                splittensor(ratio_split=2, id_split=i)(conv_2)
-            ) for i in range(2)], mode='concat', concat_axis=1, name='conv_2')
+                           Convolution2D(128, 5, 5, activation='relu', name='conv_2_' + str(i + 1))(
+                               splittensor(ratio_split=2, id_split=i)(conv_2)
+                           ) for i in range(2)], mode='concat', concat_axis=1, name='conv_2')
 
         conv_3 = MaxPooling2D((3, 3), strides=(2, 2))(conv_2)
         conv_3 = crosschannelnormalization()(conv_3)
@@ -103,15 +104,15 @@ class YearbookModel:
 
         conv_4 = ZeroPadding2D((1, 1))(conv_3)
         conv_4 = merge([
-            Convolution2D(192, 3, 3, activation='relu', name='conv_4_' + str(i + 1))(
-                splittensor(ratio_split=2, id_split=i)(conv_4)
-            ) for i in range(2)], mode='concat', concat_axis=1, name='conv_4')
+                           Convolution2D(192, 3, 3, activation='relu', name='conv_4_' + str(i + 1))(
+                               splittensor(ratio_split=2, id_split=i)(conv_4)
+                           ) for i in range(2)], mode='concat', concat_axis=1, name='conv_4')
 
         conv_5 = ZeroPadding2D((1, 1))(conv_4)
         conv_5 = merge([
-            Convolution2D(128, 3, 3, activation='relu', name='conv_5_' + str(i + 1))(
-                splittensor(ratio_split=2, id_split=i)(conv_5)
-            ) for i in range(2)], mode='concat', concat_axis=1, name='conv_5')
+                           Convolution2D(128, 3, 3, activation='relu', name='conv_5_' + str(i + 1))(
+                               splittensor(ratio_split=2, id_split=i)(conv_5)
+                           ) for i in range(2)], mode='concat', concat_axis=1, name='conv_5')
 
         dense_1 = MaxPooling2D((3, 3), strides=(2, 2), name='convpool_5')(conv_5)
         dense_1 = Flatten(name='flatten')(dense_1)
@@ -123,32 +124,46 @@ class YearbookModel:
         prediction = Activation('softmax', name='softmax')(dense_3)
 
         model = Model(input=inputs, output=prediction)
-        if(use_pretraining):
+        if use_pretraining:
             if pretrained_weights_path:
                 model.load_weights(pretrained_weights_path)
+            else:
+                raise Exception('use_pretraining is true but pretrained_weights_path is not specified!')
 
+        # Removing the final dense_3 layer
         model.layers.pop()
         model.layers.pop()
+
         last = model.layers[-1].output
         last = Dense(120, name='dense_3')(last)
         prediction = Activation('softmax', name='softmax')(last)
+
         model = Model(model.input, prediction)
-        print 'compiling...'
+
+        print(get_time_string() + 'Compiling the model..')
         model.compile(optimizer="sgd", loss='mse')
-        print 'fitting...'
-        model.fit(processed_train_images, np.array(train_labels), batch_size = 10, nb_epoch = 1, verbose = 1)
-        print 'Done fitting'
+
+        print(get_time_string() + 'Fitting the model..')
+        model.fit(x=processed_train_images, y=np.array(train_labels), batch_size=10, epochs=1, verbose=1,
+                  validation_data=(processed_valid_images, np.array(valid_labels)))
+
+        print(get_time_string() + 'Fitting complete. Returning model..')
+
+        if model_save_path is not None:
+            print(get_time_string() + 'Saving model weights to ' + model_save_path + '..')
+            model.save(model_save_path)
+
         return model
 
     def get_l1_loss(self, x, y):
-        return abs(np.argmax(x)-np.argmax(y))
+        return abs(np.argmax(x) - np.argmax(y))
 
-    def getVGG16(self, load_trained, model_weights_path, use_pretraining, pretrained_weights_path, train_dir,
+    def getVGG16(self, load_saved_model, model_save_path, use_pretraining, pretrained_weights_path, train_dir,
                  val_dir, fine_tuning_method):
         """
 
-        :param load_trained: boolean (whether to just load the model from weights path)
-        :param model_weights_path: (final model weights path, if load_pretrained is true)
+        :param load_saved_model: boolean (whether to just load the model from weights path)
+        :param model_save_path: (final model weights path, if load_pretrained is true)
         :param pretrained_weights_path: if load_trained is false and if use_pretraining is true, the path of weights to load for pre-training
         :param train_dir: training data directory
         :param val_dir: validation data directory
@@ -165,10 +180,10 @@ class YearbookModel:
         samples_per_epoch = 2000
         nb_val_samples = 800
 
-        model = applications.VGG16(classes=120)
+        model = applications.VGG16(weights=None, classes=120)
 
         model.compile(optimizer=optimizers.SGD(lr=1e-4, momentum=0.9),
-                      loss=self.get_l1_loss)
+                      loss="mean_absolute_error")
 
         train_datagen = ImageDataGenerator(
             rescale=1. / 255,

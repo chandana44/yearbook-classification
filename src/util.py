@@ -3,21 +3,29 @@ from os import path
 from scipy.misc import imread
 from scipy.misc import imresize
 import numpy as np
+import re
+import time
 
 # If you want this to work do not move this file
 SRC_PATH = path.dirname(path.abspath(__file__))
 DATA_PATH = path.join(SRC_PATH, '..', 'data')
 
-YEARBOOK_PATH = path.join(DATA_PATH, "yearbook", "yearbook")
-#YEARBOOK_PATH = path.join('','C:\Users\Chandu\Desktop\DeepLearning\project1\data\yearbook\yearbook')
-#TRAIN_PATH = path.join('','C:\Users\Chandu\Desktop\DeepLearning\project1\data\yearbook\\smalltrain')
-TRAIN_PATH = path.join(YEARBOOK_PATH, 'train')
-STREETVIEW_PATH = path.join(DATA_PATH, "geo", "geo")
+YEARBOOK_PATH = path.join(DATA_PATH, "yearbook")
+YEARBOOK_TXT_PREFIX = path.join(YEARBOOK_PATH, "yearbook_sample")
 
-import re
+YEARBOOK_TRAIN_PATH = path.join(YEARBOOK_PATH, 'train')
+YEARBOOK_VALID_PATH = path.join(YEARBOOK_PATH, 'valid')
+
+STREETVIEW_PATH = path.join(DATA_PATH, "geo")
+STREETVIEW_TXT_PREFIX = path.join(STREETVIEW_PATH, "geo")
 
 yb_r = re.compile("(\d\d\d\d)_(.*)_(.*)_(.*)_(.*)")
 sv_r = re.compile("([+-]?\d*\.\d*)_([+-]?\d*\.\d*)_\d*_-004")
+
+
+# Returns formatted current time as string
+def get_time_string():
+    return time.strftime('%c') + ' '
 
 
 # Get the label for a file
@@ -36,28 +44,28 @@ def label(filename):
 #   train=False, valid=True will only list validation files (for testing)
 def listYearbook(train=True, valid=True):
     r = []
-    if train: r = r + [n.strip().split('\t') for n in open(YEARBOOK_PATH + '_train.txt', 'r')]
-    if valid: r = r + [n.strip().split('\t') for n in open(YEARBOOK_PATH + '_valid.txt', 'r')]
+    if train: r += [n.strip().split('\t') for n in open(YEARBOOK_TXT_PREFIX + '_train.txt', 'r')]
+    if valid: r += [n.strip().split('\t') for n in open(YEARBOOK_TXT_PREFIX + '_valid.txt', 'r')]
     return r
 
 
 # List all the streetview files
 def listStreetView(train=True, valid=True):
     r = []
-    if train: r = r + [n.strip().split('\t') for n in open(STREETVIEW_PATH + '_train.txt', 'r')]
-    if valid: r = r + [n.strip().split('\t') for n in open(STREETVIEW_PATH + '_valid.txt', 'r')]
+    if train: r += [n.strip().split('\t') for n in open(STREETVIEW_TXT_PREFIX + '_train.txt', 'r')]
+    if valid: r += [n.strip().split('\t') for n in open(STREETVIEW_TXT_PREFIX + '_valid.txt', 'r')]
     return r
 
 
 def testListYearbook():
     r = []
-    r = r + [n.strip().split('\t') for n in open(YEARBOOK_PATH + '_test.txt', 'r')]
+    r += [n.strip().split('\t') for n in open(YEARBOOK_TXT_PREFIX + '_test.txt', 'r')]
     return r
 
 
 def testListStreetView():
     r = []
-    r = r + [n.strip().split('\t') for n in open(STREETVIEW_PATH + '_test.txt', 'r')]
+    r += [n.strip().split('\t') for n in open(STREETVIEW_TXT_PREFIX + '_test.txt', 'r')]
     return r
 
 
@@ -98,6 +106,27 @@ def XYToCoordinate(xy):
     import numpy as np
     assert BM is not None, "Failed to load basemap. Consider running `pip install basemap`."
     return np.vstack(BM(xy[:, 0], xy[:, 1], inverse=True)).T
+
+
+def get_data_and_labels(data, base_path):
+    """
+    :param data: list of tuples of images name and year label
+    :param base_path: base path where the images are present
+    :return: Returns list of full image path names and list of one-hot encoding of labels
+
+    """
+
+    images = [path.join(base_path, item[0]) for item in data]
+    labels = []
+
+    for item in data:
+        # Creating a one-hot vector for the output year label
+        label_vec = np.zeros(120)
+        label_vec[int(item[1]) - 1900] = 1
+
+        labels.append(label_vec)
+
+    return images, labels
 
 
 def preprocess_image_batch(image_paths, img_size=None, crop_size=None, color_mode='rgb', out=None):
