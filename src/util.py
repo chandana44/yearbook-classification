@@ -2,6 +2,8 @@
 import numpy as np
 from os import path
 import re
+from theano import function, config, shared, tensor
+import time
 from scipy.misc import imread
 from scipy.misc import imresize
 import numpy as np
@@ -174,3 +176,52 @@ def preprocess_image_batch(image_paths, img_size=None, crop_size=None, color_mod
         out.append(img_batch)
     else:
         return img_batch
+
+
+def is_using_gpu():
+    vlen = 10 * 30 * 768  # 10 x #cores x # threads per core
+    iters = 1000
+
+    rng = np.random.RandomState(22)
+    x = shared(np.asarray(rng.rand(vlen), config.floatX))
+    f = function([], tensor.exp(x))
+    print(f.maker.fgraph.toposort())
+    t0 = time.time()
+    for i in range(iters):
+        r = f()
+    t1 = time.time()
+    print("Looping %d times took %f seconds" % (iters, t1 - t0))
+    print("Result is %s" % (r,))
+    if np.any([isinstance(x.op, tensor.Elemwise) and
+                          ('Gpu' not in type(x.op).__name__)
+                  for x in f.maker.fgraph.toposort()]):
+        return False
+    else:
+        return True
+
+
+def print_mean_of_images(image_paths, img_size=None, crop_size=None, color_mode='rgb', out=None):
+    """
+    Consistent preprocessing of images batches
+
+    :param image_paths: iterable: images to process
+    :param crop_size: tuple: crop images if specified
+    :param img_size: tuple: resize images if specified
+    :param color_mode: Use rgb or change to bgr mode based on type of model you want to use
+    :param out: append output to this iterable if specified
+    """
+    img_list = []
+
+    for im_path in image_paths:
+        img = imread(im_path, mode='RGB')
+        if img_size:
+            img = imresize(img, img_size)
+
+        img = img.astype('float32')
+        # We normalize the colors (in RGB space) with the empirical means on the training set
+        # img[:, :, 0] -= 123.68
+        # img[:, :, 1] -= 116.779
+        # img[:, :, 2] -= 103.939
+
+        local_sums = np.sum(img, axis=0)
+        print(local_sums)

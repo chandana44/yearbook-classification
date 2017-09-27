@@ -1,5 +1,8 @@
 from __future__ import print_function
 
+import os
+os.environ['THEANO_FLAGS'] = "device=cuda0"
+
 from math import sin, cos, atan2, sqrt, pi
 
 from model import *
@@ -16,9 +19,12 @@ STREETVIEW_VALID_PATH = path.join(STREETVIEW_PATH, 'valid')
 STREETVIEW_TEST_PATH = path.join(STREETVIEW_PATH, 'test')
 STREETVIEW_TEST_LABEL_PATH = path.join(SRC_PATH, '..', 'output', 'geo_test_label.txt')
 
-ALEXNET_ARCHITECTURE = 'alexnet'
 CHECKPOINT_BASE_DIR = '../checkpoint/'
 ALEXNET_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/alexnet_weights.h5'
+VGG16_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/vgg16_weights.h5'
+
+pretrained_weights_path_map = {ALEXNET_ARCHITECTURE: ALEXNET_PRETRAINED_WEIGHT_PATH,
+                               VGG16_ARCHITECTURE: VGG16_PRETRAINED_WEIGHT_PATH}
 
 
 def numToRadians(x):
@@ -177,22 +183,48 @@ def predictTestStreetview(Predictor):
 if __name__ == "__main__":
     from argparse import ArgumentParser
 
+    if is_using_gpu():
+        print('Program is using GPU..')
+    else:
+        print('Program is using CPU..')
+
     parser = ArgumentParser("Evaluate a model on the validation set")
     parser.add_argument("--DATASET_TYPE", dest="dataset_type",
                         help="Dataset: yearbook/geolocation", required=True)
     parser.add_argument("--type", dest="type",
                         help="Dataset: valid/test", required=True)
 
+    parser.add_argument("--model_architecture", dest="model_architecture",
+                        help="Model architecture: AlexNet/VGG/ResNet", required=True)
+    parser.add_argument("--load_saved_model", dest="load_saved_model",
+                        help="load_saved_model: Whether to use saved model", required=False, default=False)
+    parser.add_argument("--checkpoint_file_name", dest="checkpoint_file_name",
+                        help="checkpoint_file_name: h5 file name to save to/load from", required=True)
+
+    parser.add_argument("--use_pretraining", dest="use_pretraining",
+                        help="use_pretraining: Whether to use supervised pretraining",
+                        required=False, default=True)
+    parser.add_argument("--fine_tuning_method", dest="fine_tuning_method",
+                        help="fine_tuning_method: end-to-end/phase-by-phase",
+                        required=False)
+
     args = parser.parse_args()
     print(get_time_string() + 'Operating on ' + args.dataset_type + ' dataset..')
 
+    if args.model_architecture not in ARCHITECTURES:
+        raise Exception('Invalid model architecture type!')
+
+    if args.fine_tuning_method is not None and args.fine_tuning_method not in FINE_TUNING_METHODS:
+        raise Exception('Invalid fine_tuning_method specified!')
+
     if args.dataset_type == 'yearbook':
         model = YearbookModel()
-        trained_model = model.getModel(model_architecture=ALEXNET_ARCHITECTURE, load_saved_model=False,
-                                       model_save_path=CHECKPOINT_BASE_DIR + 'alexnet_saved_model1.h5',
+        trained_model = model.getModel(model_architecture=args.model_architecture,
+                                       load_saved_model=args.load_saved_model,
+                                       model_save_path=CHECKPOINT_BASE_DIR + args.checkpoint_file_name,
                                        use_pretraining=True,
-                                       pretrained_weights_path=ALEXNET_PRETRAINED_WEIGHT_PATH,
-                                       train_dir=None, val_dir=None, fine_tuning_method=None)
+                                       pretrained_weights_path=pretrained_weights_path_map[args.model_architecture],
+                                       train_dir=None, val_dir=None, fine_tuning_method=args.fine_tuning_method)
         if args.type == 'valid':
             # evaluateYearbook(Predictor)
             evaluateYearbookFromModel(trained_model)

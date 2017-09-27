@@ -14,17 +14,29 @@ from customlayers import crosschannelnormalization, splittensor
 from util import *
 
 
+ALEXNET_ARCHITECTURE = 'alexnet'
+VGG16_ARCHITECTURE = 'vgg16'
+VGG19_ARCHITECTURE = 'vgg19'
+RESNET_ARCHITECTURE = 'resnet'
+
+ARCHITECTURES = [ALEXNET_ARCHITECTURE, VGG16_ARCHITECTURE, VGG19_ARCHITECTURE, RESNET_ARCHITECTURE]
+
+END_TO_END_FINE_TUNING = 'end-to-end'
+PHASE_BY_PHASE_FINE_TUNING = 'phase-by-phase'
+
+FINE_TUNING_METHODS = [END_TO_END_FINE_TUNING, PHASE_BY_PHASE_FINE_TUNING]
+
+
 class YearbookModel:
-    ARCHITECTURES = ['alexnet', 'vgg16']
     FINE_TUNING_METHODS = ['end-to-end', 'phase-by-phase']
     get_model_function = {}
 
     def __init__(self):
-        self.get_model_function['alexnet'] = self.getAlexNet
-        self.get_model_function['vgg16'] = self.getVGG16
+        self.get_model_function[ALEXNET_ARCHITECTURE] = self.getAlexNet
+        self.get_model_function[VGG16_ARCHITECTURE] = self.getVGG16
 
     def getModel(self, model_architecture='alexnet', load_saved_model=False, model_save_path=None, use_pretraining=False,
-                 pretrained_weights_path=None, train_dir=None, val_dir=None, fine_tuning_method='end-to-end'):
+                 pretrained_weights_path=None, train_dir=None, val_dir=None, fine_tuning_method=END_TO_END_FINE_TUNING):
 
         """
 
@@ -40,7 +52,7 @@ class YearbookModel:
 
         """
 
-        if model_architecture not in self.ARCHITECTURES:
+        if model_architecture not in ARCHITECTURES:
             raise Exception('Invalid architecture name!')
 
         return self.get_model_function[model_architecture](load_saved_model, model_save_path,
