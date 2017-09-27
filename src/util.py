@@ -130,7 +130,7 @@ def get_data_and_labels(data, base_path):
 
         labels.append(label_vec)
 
-    return images, labels
+    return images, np.array(labels)
 
 
 def preprocess_image_batch(image_paths, img_size=None, crop_size=None, color_mode='rgb', out=None):
