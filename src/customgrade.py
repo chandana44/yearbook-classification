@@ -195,7 +195,7 @@ if __name__ == "__main__":
                         help="Dataset: valid/test", required=True)
 
     parser.add_argument("--model_architecture", dest="model_architecture",
-                        help="Model architecture: AlexNet/VGG/ResNet", required=True)
+                        help="Model architecture: alexnet/vgg16/resnet", required=True)
     parser.add_argument("--load_saved_model", dest="load_saved_model",
                         help="load_saved_model: Whether to use saved model", required=False, default=False)
     parser.add_argument("--checkpoint_file_name", dest="checkpoint_file_name",
