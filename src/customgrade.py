@@ -199,13 +199,14 @@ if __name__ == "__main__":
     parser.add_argument("--model_architecture", dest="model_architecture",
                         help="Model architecture: alexnet/vgg16/resnet152", required=True)
     parser.add_argument("--load_saved_model", dest="load_saved_model",
-                        help="load_saved_model: Whether to use saved model", required=False, default=False)
+                        help="load_saved_model: Whether to use saved model",
+                        required=False, default=0, type=int)
     parser.add_argument("--checkpoint_file_name", dest="checkpoint_file_name",
                         help="checkpoint_file_name: h5 file name to save to/load from", required=True)
 
     parser.add_argument("--use_pretraining", dest="use_pretraining",
                         help="use_pretraining: Whether to use supervised pretraining",
-                        required=False, default=True)
+                        required=False, default=1, type=int)
     parser.add_argument("--fine_tuning_method", dest="fine_tuning_method",
                         help="fine_tuning_method: end-to-end/phase-by-phase",
                         required=False)
