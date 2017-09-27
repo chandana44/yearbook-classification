@@ -22,9 +22,11 @@ STREETVIEW_TEST_LABEL_PATH = path.join(SRC_PATH, '..', 'output', 'geo_test_label
 CHECKPOINT_BASE_DIR = '../checkpoint/'
 ALEXNET_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/alexnet_weights.h5'
 VGG16_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/vgg16_weights.h5'
+RESNET152_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/resnet152_weights.h5'
 
 pretrained_weights_path_map = {ALEXNET_ARCHITECTURE: ALEXNET_PRETRAINED_WEIGHT_PATH,
-                               VGG16_ARCHITECTURE: VGG16_PRETRAINED_WEIGHT_PATH}
+                               VGG16_ARCHITECTURE: VGG16_PRETRAINED_WEIGHT_PATH,
+                               RESNET152_ARCHITECTURE: RESNET152_PRETRAINED_WEIGHT_PATH}
 
 
 def numToRadians(x):
@@ -195,7 +197,7 @@ if __name__ == "__main__":
                         help="Dataset: valid/test", required=True)
 
     parser.add_argument("--model_architecture", dest="model_architecture",
-                        help="Model architecture: alexnet/vgg16/resnet", required=True)
+                        help="Model architecture: alexnet/vgg16/resnet152", required=True)
     parser.add_argument("--load_saved_model", dest="load_saved_model",
                         help="load_saved_model: Whether to use saved model", required=False, default=False)
     parser.add_argument("--checkpoint_file_name", dest="checkpoint_file_name",
