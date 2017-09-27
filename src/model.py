@@ -12,14 +12,14 @@ from keras.models import load_model
 
 from customlayers import crosschannelnormalization, splittensor
 from util import *
-
+from resnet_152 import resnet152_model
 
 ALEXNET_ARCHITECTURE = 'alexnet'
 VGG16_ARCHITECTURE = 'vgg16'
 VGG19_ARCHITECTURE = 'vgg19'
-RESNET_ARCHITECTURE = 'resnet'
+RESNET152_ARCHITECTURE = 'resnet152'
 
-ARCHITECTURES = [ALEXNET_ARCHITECTURE, VGG16_ARCHITECTURE, VGG19_ARCHITECTURE, RESNET_ARCHITECTURE]
+ARCHITECTURES = [ALEXNET_ARCHITECTURE, VGG16_ARCHITECTURE, VGG19_ARCHITECTURE, RESNET152_ARCHITECTURE]
 
 END_TO_END_FINE_TUNING = 'end-to-end'
 PHASE_BY_PHASE_FINE_TUNING = 'phase-by-phase'
@@ -238,3 +238,58 @@ class YearbookModel:
             nb_val_samples=nb_val_samples)
 
         return None
+
+    def getResNet152(self, load_saved_model, model_save_path, use_pretraining, pretrained_weights_path, train_dir,
+                 val_dir, fine_tuning_method):
+        """
+
+        :param load_saved_model: boolean (whether to just load the model from weights path)
+        :param model_save_path: (final model weights path, if load_pretrained is true)
+        :param pretrained_weights_path: if load_trained is false and if use_pretraining is true, the path of weights to load for pre-training
+        :param train_dir: training data directory
+        :param val_dir: validation data directory
+        :param use_pretraining: boolean, whether to use pre-training or train from scratch
+        :param fine_tuning_method: whether to use end-to-end pre-training or phase-by-phase pre-training
+        :return: Returns the AlexNet model according to the parameters provided
+
+        """
+        print(get_time_string() + 'Creating ResNet152 model..')
+
+        if load_saved_model:
+            if model_save_path is None:
+                raise Exception('Unable to load trained model as model_weights_path is None!')
+            model = load_model(model_save_path)
+            return model
+
+        img_rows, img_cols = 224, 224  # Resolution of inputs
+        channel = 3
+        num_classes = 120
+        batch_size = 16
+        num_epochs = 10
+
+        train_data = listYearbook(True, False)
+        valid_data = listYearbook(False, True)
+
+        train_images, train_labels = get_data_and_labels(train_data, YEARBOOK_TRAIN_PATH)
+        valid_images, valid_labels = get_data_and_labels(valid_data, YEARBOOK_VALID_PATH)
+
+        # Preprocessing images
+        # chandu to check if preprocessing is diff for resnet
+        processed_train_images = preprocess_image_batch(image_paths=train_images, img_size=(256, 256),
+                                                        crop_size=(img_rows, img_cols), color_mode="rgb")
+        processed_valid_images = preprocess_image_batch(image_paths=valid_images, img_size=(256, 256),
+                                                        crop_size=(img_rows, img_cols), color_mode="rgb")
+
+        model = resnet152_model(img_rows, img_cols, channel, num_classes, pretrained_weights_path)
+
+        # Start Fine-tuning
+        model.fit(processed_train_images, train_labels,
+                  batch_size=batch_size,
+                  nb_epoch=num_epochs,
+                  shuffle=True,
+                  verbose=1,
+                  validation_data=(processed_valid_images, valid_labels),
+                  )
+
+        return model
+
