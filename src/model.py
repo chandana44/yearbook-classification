@@ -155,8 +155,8 @@ class YearbookModel:
         model.compile(optimizer="sgd", loss='mse')
 
         print(get_time_string() + 'Fitting the model..')
-        model.fit(x=processed_train_images, y=np.array(train_labels), batch_size=128, epochs=10, verbose=1,
-                  validation_data=(processed_valid_images, np.array(valid_labels)))
+        model.fit(x=processed_train_images, y=train_labels, batch_size=128, epochs=10, verbose=1,
+                  validation_data=(processed_valid_images, valid_labels))
 
         print(get_time_string() + 'Fitting complete. Returning model..')
 
