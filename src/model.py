@@ -36,7 +36,8 @@ class YearbookModel:
         self.get_model_function[VGG16_ARCHITECTURE] = self.getVGG16
 
     def getModel(self, model_architecture='alexnet', load_saved_model=False, model_save_path=None, use_pretraining=False,
-                 pretrained_weights_path=None, train_dir=None, val_dir=None, fine_tuning_method=END_TO_END_FINE_TUNING):
+                 pretrained_weights_path=None, train_dir=None, val_dir=None, fine_tuning_method=END_TO_END_FINE_TUNING,
+                 batch_size=128, num_epochs=10, optimizer='sgd', loss='mse'):
 
         """
 
@@ -48,6 +49,10 @@ class YearbookModel:
         :param val_dir: validation data directory
         :param use_pretraining: boolean, whether to use pre-training or train from scratch
         :param fine_tuning_method: whether to use end-to-end pre-training or phase-by-phase pre-training
+        :param batch_size: batch_size to use while fitting the model
+        :param num_epochs: number of epochs to train the model
+        :param optimizer: type of optimizer to use (sgd|adagrad)
+        :param loss: type of loss to use (mse|l1)
         :return: Returns the corresponding deepnet model
 
         """
@@ -59,10 +64,12 @@ class YearbookModel:
                                                            use_pretraining,
                                                            pretrained_weights_path,
                                                            train_dir, val_dir,
-                                                           fine_tuning_method)
+                                                           fine_tuning_method,
+                                                           batch_size, num_epochs,
+                                                           optimizer, loss)
 
     def getAlexNet(self, load_saved_model, model_save_path, use_pretraining, pretrained_weights_path,
-                   train_dir, val_dir, fine_tuning_method):
+                   train_dir, val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss):
         """
 
         :param load_saved_model: boolean (whether to just load the model from weights path)
@@ -72,6 +79,10 @@ class YearbookModel:
         :param val_dir: validation data directory
         :param use_pretraining: boolean, whether to use pre-training or train from scratch
         :param fine_tuning_method: whether to use end-to-end pre-training or phase-by-phase pre-training
+        :param batch_size: batch_size to use while fitting the model
+        :param num_epochs: number of epochs to train the model
+        :param optimizer: type of optimizer to use (sgd|adagrad)
+        :param loss: type of loss to use (mse|l1)
         :return: Returns the AlexNet model according to the parameters provided
 
         """
@@ -152,11 +163,11 @@ class YearbookModel:
         model = Model(model.input, prediction)
 
         print(get_time_string() + 'Compiling the model..')
-        model.compile(optimizer="sgd", loss='mse')
+        model.compile(optimizer=optimizer, loss=loss)
 
         print(get_time_string() + 'Fitting the model..')
-        model.fit(x=processed_train_images, y=train_labels, batch_size=128, epochs=10, verbose=1,
-                  validation_data=(processed_valid_images, valid_labels))
+        model.fit(x=processed_train_images, y=train_labels, batch_size=batch_size, epochs=num_epochs,
+                  verbose=1, validation_data=(processed_valid_images, valid_labels))
 
         print(get_time_string() + 'Fitting complete. Returning model..')
 
@@ -170,7 +181,7 @@ class YearbookModel:
         return abs(np.argmax(x) - np.argmax(y))
 
     def getVGG16(self, load_saved_model, model_save_path, use_pretraining, pretrained_weights_path, train_dir,
-                 val_dir, fine_tuning_method):
+                 val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss):
         """
 
         :param load_saved_model: boolean (whether to just load the model from weights path)
@@ -180,6 +191,10 @@ class YearbookModel:
         :param val_dir: validation data directory
         :param use_pretraining: boolean, whether to use pre-training or train from scratch
         :param fine_tuning_method: whether to use end-to-end pre-training or phase-by-phase pre-training
+        :param batch_size: batch_size to use while fitting the model
+        :param num_epochs: number of epochs to train the model
+        :param optimizer: type of optimizer to use (sgd|adagrad)
+        :param loss: type of loss to use (mse|l1)
         :return: Returns the AlexNet model according to the parameters provided
 
         """

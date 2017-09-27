@@ -209,7 +209,22 @@ if __name__ == "__main__":
                         help="fine_tuning_method: end-to-end/phase-by-phase",
                         required=False)
 
+    parser.add_argument("--batch_size", dest="batch_size",
+                        help="batch_size: size of batches while fitting the model",
+                        required=False, default=128, type=int)
+    parser.add_argument("--num_epochs", dest="num_epochs",
+                        help="num_epochs: number of epochs to train the model for",
+                        required=False, default=20, type=int)
+    parser.add_argument("--loss", dest="loss",
+                        help="loss function to use: l1|mse|mae",
+                        required=True)
+    parser.add_argument("--optimizer", dest="optimizer",
+                        help="optimizer to use: sgd|adagrad",
+                        required=False, default='sgd')
+
     args = parser.parse_args()
+    print('Args provided: ' + str(args))
+
     print(get_time_string() + 'Operating on ' + args.dataset_type + ' dataset..')
 
     if args.model_architecture not in ARCHITECTURES:
@@ -225,7 +240,9 @@ if __name__ == "__main__":
                                        model_save_path=CHECKPOINT_BASE_DIR + args.checkpoint_file_name,
                                        use_pretraining=True,
                                        pretrained_weights_path=pretrained_weights_path_map[args.model_architecture],
-                                       train_dir=None, val_dir=None, fine_tuning_method=args.fine_tuning_method)
+                                       train_dir=None, val_dir=None, fine_tuning_method=args.fine_tuning_method,
+                                       batch_size=args.batch_size, num_epochs=args.num_epochs,
+                                       optimizer=args.optimizer, loss=args.loss)
         if args.type == 'valid':
             # evaluateYearbook(Predictor)
             evaluateYearbookFromModel(trained_model)
