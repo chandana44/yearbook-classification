@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ "$#" -ne 1 ]; then
+if [ "$#" -ne 6 ]; then
     echo "Illegal number of parameters; Please provide <type: test|valid> <model_architecture: alexnet|vgg16|resnet> <load_saved_model: True|False> <checkpoint_file_name> <use_pretraining: True|False> <fine_tuning_method: end-to-end|phase-by-phase> as the parameter;"
     exit 1
 fi
