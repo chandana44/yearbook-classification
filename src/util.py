@@ -1,14 +1,12 @@
 # Feel free to modify this to your needs. We will not rely on your util.py
-import numpy as np
-from os import path
 import re
-from theano import function, config, shared, tensor
 import time
+from os import path
+
+import numpy as np
 from scipy.misc import imread
 from scipy.misc import imresize
-import numpy as np
-import re
-import time
+from theano import function, config, shared, tensor
 
 # If you want this to work do not move this file
 SRC_PATH = path.dirname(path.abspath(__file__))

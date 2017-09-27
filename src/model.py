@@ -9,6 +9,7 @@ from keras.layers.convolutional import MaxPooling2D
 from keras.layers.convolutional import ZeroPadding2D
 from keras.models import Model
 from keras.models import load_model
+from keras import backend as K
 
 from customlayers import crosschannelnormalization, splittensor
 from util import *
@@ -163,7 +164,10 @@ class YearbookModel:
         model = Model(model.input, prediction)
 
         print(get_time_string() + 'Compiling the model..')
-        model.compile(optimizer=optimizer, loss=loss)
+        if loss == 'l1':
+            model.compile(optimizer=optimizer, loss=self.get_l1_loss)
+        else:
+            model.compile(optimizer=optimizer, loss=loss)
 
         print(get_time_string() + 'Fitting the model..')
         model.fit(x=processed_train_images, y=train_labels, batch_size=batch_size, epochs=num_epochs,
@@ -178,7 +182,7 @@ class YearbookModel:
         return model
 
     def get_l1_loss(self, x, y):
-        return abs(np.argmax(x) - np.argmax(y))
+        return abs(K.argmax(x) - K.argmax(y))
 
     def getVGG16(self, load_saved_model, model_save_path, use_pretraining, pretrained_weights_path, train_dir,
                  val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss):

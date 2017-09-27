@@ -1,0 +1,1 @@
+./run.sh --DATASET_TYPE=yearbook --type=valid --model_architecture=alexnet --load_saved_model=0 --checkpoint_file_name=checkpoint1.h5 --use_pretraining=1 --fine_tuning_method=end-to-end --batch_size=128 --num_epochs=20 --loss=l1 --optimizer=sgd
