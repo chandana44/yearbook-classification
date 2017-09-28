@@ -1,12 +1,16 @@
 from keras.optimizers import SGD
-from keras.layers import Input, Dense, Convolution2D, MaxPooling2D, AveragePooling2D, ZeroPadding2D, Flatten, merge, Activation
+from keras.layers import Input, Dense, Convolution2D, MaxPooling2D, AveragePooling2D, ZeroPadding2D, Flatten, merge, \
+    Activation
 from keras.layers.normalization import BatchNormalization
 from keras.models import Model
 
 from customlayers import Scale
+from util import get_time_string
 
 import sys
+
 sys.setrecursionlimit(3000)
+
 
 def identity_block(input_tensor, kernel_size, filters, stage, block):
     '''The identity_block is the block that has no conv layer at shortcut
@@ -42,6 +46,7 @@ def identity_block(input_tensor, kernel_size, filters, stage, block):
     x = merge([x, input_tensor], mode='sum', name='res' + str(stage) + block)
     x = Activation('relu', name='res' + str(stage) + block + '_relu')(x)
     return x
+
 
 def conv_block(input_tensor, kernel_size, filters, stage, block, strides=(2, 2)):
     '''conv_block is the block that has a conv layer at shortcut
@@ -86,7 +91,9 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, strides=(2, 2))
     x = Activation('relu', name='res' + str(stage) + block + '_relu')(x)
     return x
 
-def resnet152_model(img_rows, img_cols, color_type=1, num_classes=None, weights_path=None):
+
+def resnet152_model(img_rows, img_cols, color_type=1, num_classes=None, use_pretraining=False,
+                    pretrained_weights_path=None, optimizer=None, loss=None):
     """
     Parameters:
       img_rows, img_cols - resolution of inputs
@@ -113,12 +120,12 @@ def resnet152_model(img_rows, img_cols, color_type=1, num_classes=None, weights_
     x = identity_block(x, 3, [64, 64, 256], stage=2, block='c')
 
     x = conv_block(x, 3, [128, 128, 512], stage=3, block='a')
-    for i in range(1,8):
-      x = identity_block(x, 3, [128, 128, 512], stage=3, block='b'+str(i))
+    for i in range(1, 8):
+        x = identity_block(x, 3, [128, 128, 512], stage=3, block='b' + str(i))
 
     x = conv_block(x, 3, [256, 256, 1024], stage=4, block='a')
-    for i in range(1,36):
-      x = identity_block(x, 3, [256, 256, 1024], stage=4, block='b'+str(i))
+    for i in range(1, 36):
+        x = identity_block(x, 3, [256, 256, 1024], stage=4, block='b' + str(i))
 
     x = conv_block(x, 3, [512, 512, 2048], stage=5, block='a')
     x = identity_block(x, 3, [512, 512, 2048], stage=5, block='b')
@@ -131,7 +138,11 @@ def resnet152_model(img_rows, img_cols, color_type=1, num_classes=None, weights_
     model = Model(img_input, x_fc)
 
     # Use pre-trained weights for Theano backend
-    model.load_weights(weights_path, by_name=True)
+    if use_pretraining:
+        if pretrained_weights_path:
+            model.load_weights(pretrained_weights_path, by_name=True)
+        else:
+            raise Exception('use_pretraining is true but pretrained_weights_path is not specified!')
 
     # Truncate and replace softmax layer for transfer learning
     # Cannot use model.layers.pop() since model is not of Sequential() type
@@ -144,6 +155,7 @@ def resnet152_model(img_rows, img_cols, color_type=1, num_classes=None, weights_
 
     # Learning rate is changed to 0.001
     sgd = SGD(lr=1e-3, decay=1e-6, momentum=0.9, nesterov=True)
+    print(get_time_string() + 'Compiling the model..')
     model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics=['accuracy'])
 
     return model

@@ -5,10 +5,12 @@ from keras.layers.convolutional import Convolution2D
 from keras.layers.core import Lambda
 from keras.layers import Merge
 from keras.engine import InputSpec
+
 try:
     from keras import initializations
 except ImportError:
     from keras import initializers as initializations
+
 
 def crosschannelnormalization(alpha=1e-4, k=2, beta=0.75, n=5, **kwargs):
     """
@@ -60,12 +62,12 @@ def splittensor(axis=1, ratio_split=1, id_split=0, **kwargs):
 def convolution2Dgroup(n_group, nb_filter, nb_row, nb_col, **kwargs):
     def f(input):
         return Merge([
-                         Convolution2D(nb_filter // n_group, nb_row, nb_col)(
-                             splittensor(axis=1,
-                                         ratio_split=n_group,
-                                         id_split=i)(input))
-                         for i in range(n_group)
-                         ], mode='concat', concat_axis=1)
+            Convolution2D(nb_filter // n_group, nb_row, nb_col)(
+                splittensor(axis=1,
+                            ratio_split=n_group,
+                            id_split=i)(input))
+            for i in range(n_group)
+        ], mode='concat', concat_axis=1)
 
     return f
 
@@ -112,7 +114,8 @@ class Scale(Layer):
             Theano/TensorFlow function to use for weights initialization.
             This parameter is only relevant if you don't pass a `weights` argument.
     '''
-    def __init__(self, weights=None, axis=-1, momentum = 0.9, beta_init='zero', gamma_init='one', **kwargs):
+
+    def __init__(self, weights=None, axis=-1, momentum=0.9, beta_init='zero', gamma_init='one', **kwargs):
         self.momentum = momentum
         self.axis = axis
         self.beta_init = initializations.get(beta_init)
@@ -128,8 +131,8 @@ class Scale(Layer):
         # chandu to check if it works with theano
         self.gamma = K.variable(self.gamma_init(shape), name='{}_gamma'.format(self.name))
         self.beta = K.variable(self.beta_init(shape), name='{}_beta'.format(self.name))
-        #self.gamma = self.gamma_init(shape, name='{}_gamma'.format(self.name))
-        #self.beta = self.beta_init(shape, name='{}_beta'.format(self.name))
+        # self.gamma = self.gamma_init(shape, name='{}_gamma'.format(self.name))
+        # self.beta = self.beta_init(shape, name='{}_beta'.format(self.name))
         self.trainable_weights = [self.gamma, self.beta]
 
         if self.initial_weights is not None:

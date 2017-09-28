@@ -15,13 +15,6 @@ from customlayers import crosschannelnormalization, splittensor
 from util import *
 from resnet_152 import resnet152_model
 
-ALEXNET_ARCHITECTURE = 'alexnet'
-VGG16_ARCHITECTURE = 'vgg16'
-VGG19_ARCHITECTURE = 'vgg19'
-RESNET152_ARCHITECTURE = 'resnet152'
-
-ARCHITECTURES = [ALEXNET_ARCHITECTURE, VGG16_ARCHITECTURE, VGG19_ARCHITECTURE, RESNET152_ARCHITECTURE]
-
 END_TO_END_FINE_TUNING = 'end-to-end'
 PHASE_BY_PHASE_FINE_TUNING = 'phase-by-phase'
 
@@ -35,8 +28,13 @@ class YearbookModel:
     def __init__(self):
         self.get_model_function[ALEXNET_ARCHITECTURE] = self.getAlexNet
         self.get_model_function[VGG16_ARCHITECTURE] = self.getVGG16
+        self.get_model_function[RESNET152_ARCHITECTURE] = self.getResNet152
 
-    def getModel(self, model_architecture='alexnet', load_saved_model=False, model_save_path=None, use_pretraining=False,
+    def get_l1_loss(self, x, y):
+        return abs(K.argmax(x) - K.argmax(y))
+
+    def getModel(self, model_architecture='alexnet', load_saved_model=False, model_save_path=None,
+                 use_pretraining=False,
                  pretrained_weights_path=None, train_dir=None, val_dir=None, fine_tuning_method=END_TO_END_FINE_TUNING,
                  batch_size=128, num_epochs=10, optimizer='sgd', loss='mse'):
 
@@ -61,7 +59,21 @@ class YearbookModel:
         if model_architecture not in ARCHITECTURES:
             raise Exception('Invalid architecture name!')
 
-        return self.get_model_function[model_architecture](load_saved_model, model_save_path,
+        if load_saved_model:
+            if model_save_path is None:
+                raise Exception('Unable to load trained model as model_weights_path is None!')
+            model = load_model(model_save_path)
+            return model
+
+        # get train and validation data
+        train_data = listYearbook(True, False)
+        valid_data = listYearbook(False, True)
+
+        train_images, train_labels = get_data_and_labels(train_data, YEARBOOK_TRAIN_PATH)
+        valid_images, valid_labels = get_data_and_labels(valid_data, YEARBOOK_VALID_PATH)
+
+        return self.get_model_function[model_architecture](train_images, train_labels, valid_images, valid_labels,
+                                                           model_save_path,
                                                            use_pretraining,
                                                            pretrained_weights_path,
                                                            train_dir, val_dir,
@@ -69,7 +81,8 @@ class YearbookModel:
                                                            batch_size, num_epochs,
                                                            optimizer, loss)
 
-    def getAlexNet(self, load_saved_model, model_save_path, use_pretraining, pretrained_weights_path,
+    def getAlexNet(self, train_images, train_labels, valid_images, valid_labels, model_save_path, use_pretraining,
+                   pretrained_weights_path,
                    train_dir, val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss):
         """
 
@@ -88,25 +101,11 @@ class YearbookModel:
 
         """
 
-        print(get_time_string() + 'Creating AlextNet model..')
-
-        if load_saved_model:
-            if model_save_path is None:
-                raise Exception('Unable to load trained model as model_weights_path is None!')
-            model = load_model(model_save_path)
-            return model
-
-        train_data = listYearbook(True, False)
-        valid_data = listYearbook(False, True)
-
-        train_images, train_labels = get_data_and_labels(train_data, YEARBOOK_TRAIN_PATH)
-        valid_images, valid_labels = get_data_and_labels(valid_data, YEARBOOK_VALID_PATH)
+        print(get_time_string() + 'Creating AlexNet model..')
 
         # Preprocessing images
-        processed_train_images = preprocess_image_batch(image_paths=train_images, img_size=(256, 256),
-                                                        crop_size=(227, 227), color_mode="rgb")
-        processed_valid_images = preprocess_image_batch(image_paths=valid_images, img_size=(256, 256),
-                                                        crop_size=(227, 227), color_mode="rgb")
+        processed_train_images = preprocess_image_batch(image_paths=train_images, architecture=ALEXNET_ARCHITECTURE)
+        processed_valid_images = preprocess_image_batch(image_paths=valid_images, architecture=ALEXNET_ARCHITECTURE)
 
         inputs = Input(shape=(3, 227, 227))
         conv_1 = Convolution2D(96, 11, 11, subsample=(4, 4), activation='relu',
@@ -116,9 +115,9 @@ class YearbookModel:
         conv_2 = crosschannelnormalization(name='convpool_1')(conv_2)
         conv_2 = ZeroPadding2D((2, 2))(conv_2)
         conv_2 = merge([
-                           Convolution2D(128, 5, 5, activation='relu', name='conv_2_' + str(i + 1))(
-                               splittensor(ratio_split=2, id_split=i)(conv_2)
-                           ) for i in range(2)], mode='concat', concat_axis=1, name='conv_2')
+            Convolution2D(128, 5, 5, activation='relu', name='conv_2_' + str(i + 1))(
+                splittensor(ratio_split=2, id_split=i)(conv_2)
+            ) for i in range(2)], mode='concat', concat_axis=1, name='conv_2')
 
         conv_3 = MaxPooling2D((3, 3), strides=(2, 2))(conv_2)
         conv_3 = crosschannelnormalization()(conv_3)
@@ -127,15 +126,15 @@ class YearbookModel:
 
         conv_4 = ZeroPadding2D((1, 1))(conv_3)
         conv_4 = merge([
-                           Convolution2D(192, 3, 3, activation='relu', name='conv_4_' + str(i + 1))(
-                               splittensor(ratio_split=2, id_split=i)(conv_4)
-                           ) for i in range(2)], mode='concat', concat_axis=1, name='conv_4')
+            Convolution2D(192, 3, 3, activation='relu', name='conv_4_' + str(i + 1))(
+                splittensor(ratio_split=2, id_split=i)(conv_4)
+            ) for i in range(2)], mode='concat', concat_axis=1, name='conv_4')
 
         conv_5 = ZeroPadding2D((1, 1))(conv_4)
         conv_5 = merge([
-                           Convolution2D(128, 3, 3, activation='relu', name='conv_5_' + str(i + 1))(
-                               splittensor(ratio_split=2, id_split=i)(conv_5)
-                           ) for i in range(2)], mode='concat', concat_axis=1, name='conv_5')
+            Convolution2D(128, 3, 3, activation='relu', name='conv_5_' + str(i + 1))(
+                splittensor(ratio_split=2, id_split=i)(conv_5)
+            ) for i in range(2)], mode='concat', concat_axis=1, name='conv_5')
 
         dense_1 = MaxPooling2D((3, 3), strides=(2, 2), name='convpool_5')(conv_5)
         dense_1 = Flatten(name='flatten')(dense_1)
@@ -158,7 +157,7 @@ class YearbookModel:
         model.layers.pop()
 
         last = model.layers[-1].output
-        last = Dense(120, name='dense_3')(last)
+        last = Dense(NUM_CLASSES, name='dense_3')(last)
         prediction = Activation('softmax', name='softmax')(last)
 
         model = Model(model.input, prediction)
@@ -181,10 +180,8 @@ class YearbookModel:
 
         return model
 
-    def get_l1_loss(self, x, y):
-        return abs(K.argmax(x) - K.argmax(y))
-
-    def getVGG16(self, load_saved_model, model_save_path, use_pretraining, pretrained_weights_path, train_dir,
+    def getVGG16(self, train_images, train_labels, valid_images, valid_labels, model_save_path, use_pretraining,
+                 pretrained_weights_path, train_dir,
                  val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss):
         """
 
@@ -210,7 +207,7 @@ class YearbookModel:
         samples_per_epoch = 2000
         nb_val_samples = 800
 
-        model = applications.VGG16(weights=None, classes=120)
+        model = applications.VGG16(weights=None, classes=NUM_CLASSES)
 
         model.compile(optimizer=optimizers.SGD(lr=1e-4, momentum=0.9),
                       loss="mean_absolute_error")
@@ -243,8 +240,9 @@ class YearbookModel:
 
         return None
 
-    def getResNet152(self, load_saved_model, model_save_path, use_pretraining, pretrained_weights_path, train_dir,
-                 val_dir, fine_tuning_method):
+    def getResNet152(self, train_images, train_labels, valid_images, valid_labels, model_save_path, use_pretraining,
+                     pretrained_weights_path, train_dir,
+                     val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss):
         """
 
         :param load_saved_model: boolean (whether to just load the model from weights path)
@@ -259,41 +257,29 @@ class YearbookModel:
         """
         print(get_time_string() + 'Creating ResNet152 model..')
 
-        if load_saved_model:
-            if model_save_path is None:
-                raise Exception('Unable to load trained model as model_weights_path is None!')
-            model = load_model(model_save_path)
-            return model
-
         img_rows, img_cols = 224, 224  # Resolution of inputs
-        channel = 3
-        num_classes = 120
-        batch_size = 16
-        num_epochs = 10
-
-        train_data = listYearbook(True, False)
-        valid_data = listYearbook(False, True)
-
-        train_images, train_labels = get_data_and_labels(train_data, YEARBOOK_TRAIN_PATH)
-        valid_images, valid_labels = get_data_and_labels(valid_data, YEARBOOK_VALID_PATH)
+        channels = 3
 
         # Preprocessing images
-        # chandu to check if preprocessing is diff for resnet
-        processed_train_images = preprocess_image_batch(image_paths=train_images, img_size=(256, 256),
-                                                        crop_size=(img_rows, img_cols), color_mode="rgb")
-        processed_valid_images = preprocess_image_batch(image_paths=valid_images, img_size=(256, 256),
-                                                        crop_size=(img_rows, img_cols), color_mode="rgb")
+        processed_train_images = preprocess_image_batch(image_paths=train_images, architecture=RESNET152_ARCHITECTURE)
+        processed_valid_images = preprocess_image_batch(image_paths=valid_images, architecture=RESNET152_ARCHITECTURE)
 
-        model = resnet152_model(img_rows, img_cols, channel, num_classes, pretrained_weights_path)
+        model = resnet152_model(img_rows, img_cols, channels, NUM_CLASSES, use_pretraining, pretrained_weights_path,
+                                optimizer, loss)
 
         # Start Fine-tuning
+        print(get_time_string() + 'Fitting the model..')
         model.fit(processed_train_images, train_labels,
                   batch_size=batch_size,
                   nb_epoch=num_epochs,
                   shuffle=True,
-                  verbose=1,
-                  validation_data=(processed_valid_images, valid_labels),
+                  verbose=1, validation_data=(processed_valid_images, valid_labels),
                   )
 
-        return model
+        print(get_time_string() + 'Fitting complete. Returning model..')
 
+        if model_save_path is not None:
+            print(get_time_string() + 'Saving model weights to ' + model_save_path + '..')
+            model.save(model_save_path)
+
+        return model

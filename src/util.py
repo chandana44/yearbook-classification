@@ -2,7 +2,6 @@
 import re
 import time
 from os import path
-
 import numpy as np
 from scipy.misc import imread
 from scipy.misc import imresize
@@ -21,8 +20,34 @@ YEARBOOK_VALID_PATH = path.join(YEARBOOK_PATH, 'valid')
 STREETVIEW_PATH = path.join(DATA_PATH, "geo")
 STREETVIEW_TXT_PREFIX = path.join(STREETVIEW_PATH, "geo")
 
+NUM_CLASSES = 118
+
 yb_r = re.compile("(\d\d\d\d)_(.*)_(.*)_(.*)_(.*)")
 sv_r = re.compile("([+-]?\d*\.\d*)_([+-]?\d*\.\d*)_\d*_-004")
+
+# architectures
+ALEXNET_ARCHITECTURE = 'alexnet'
+VGG16_ARCHITECTURE = 'vgg16'
+VGG19_ARCHITECTURE = 'vgg19'
+RESNET152_ARCHITECTURE = 'resnet152'
+
+ARCHITECTURES = [ALEXNET_ARCHITECTURE, VGG16_ARCHITECTURE, VGG19_ARCHITECTURE, RESNET152_ARCHITECTURE]
+
+# dictionary for arcitectures-image sizes
+image_sizes = {}
+image_sizes[ALEXNET_ARCHITECTURE] = (256, 256)
+image_sizes[VGG16_ARCHITECTURE] = None  # chandu check
+image_sizes[RESNET152_ARCHITECTURE] = (256, 256)
+
+crop_sizes = {}
+crop_sizes[ALEXNET_ARCHITECTURE] = (227, 227)
+crop_sizes[VGG16_ARCHITECTURE] = (224, 224)
+crop_sizes[RESNET152_ARCHITECTURE] = (224, 224)
+
+color_modes = {}
+color_modes[ALEXNET_ARCHITECTURE] = "rgb"
+color_modes[VGG16_ARCHITECTURE] = ""
+color_modes[RESNET152_ARCHITECTURE] = "rgb"
 
 
 # Returns formatted current time as string
@@ -123,7 +148,7 @@ def get_data_and_labels(data, base_path):
 
     for item in data:
         # Creating a one-hot vector for the output year label
-        label_vec = np.zeros(120)
+        label_vec = np.zeros(NUM_CLASSES)
         label_vec[int(item[1]) - 1900] = 1
 
         labels.append(label_vec)
@@ -131,7 +156,7 @@ def get_data_and_labels(data, base_path):
     return images, np.array(labels)
 
 
-def preprocess_image_batch(image_paths, img_size=None, crop_size=None, color_mode='rgb', out=None):
+def preprocess_image_batch(image_paths, architecture, out=None):
     """
     Consistent preprocessing of images batches
 
@@ -145,6 +170,7 @@ def preprocess_image_batch(image_paths, img_size=None, crop_size=None, color_mod
 
     for im_path in image_paths:
         img = imread(im_path, mode='RGB')
+        img_size = image_sizes[architecture]
         if img_size:
             img = imresize(img, img_size)
 
@@ -154,10 +180,12 @@ def preprocess_image_batch(image_paths, img_size=None, crop_size=None, color_mod
         img[:, :, 1] -= 116.779
         img[:, :, 2] -= 103.939
         # We permute the colors to get them in the BGR order
+        color_mode = color_modes[architecture]
         if color_mode == 'bgr':
             img[:, :, [0, 1, 2]] = img[:, :, [2, 1, 0]]
         img = img.transpose((2, 0, 1))
 
+        crop_size = crop_sizes[architecture]
         if crop_size:
             img = img[:, (img_size[0] - crop_size[0]) // 2:(img_size[0] + crop_size[0]) // 2
             , (img_size[1] - crop_size[1]) // 2:(img_size[1] + crop_size[1]) // 2]
@@ -191,8 +219,8 @@ def is_using_gpu():
     print("Looping %d times took %f seconds" % (iters, t1 - t0))
     print("Result is %s" % (r,))
     if np.any([isinstance(x.op, tensor.Elemwise) and
-                          ('Gpu' not in type(x.op).__name__)
-                  for x in f.maker.fgraph.toposort()]):
+                       ('Gpu' not in type(x.op).__name__)
+               for x in f.maker.fgraph.toposort()]):
         return False
     else:
         return True
