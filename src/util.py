@@ -265,10 +265,10 @@ def print_mean_of_images(image_paths, img_size=None, crop_size=None, color_mode=
     print(global_sums)
     print(global_sums[0]/count, global_sums[1]/count, global_sums[2]/count)
 
-train_data = listYearbook(True, False)
-valid_data = listYearbook(False, True)
-
-train_images, train_labels = get_data_and_labels(train_data, YEARBOOK_TRAIN_PATH)
-valid_images, valid_labels = get_data_and_labels(valid_data, YEARBOOK_VALID_PATH)
-
-print_mean_of_images(image_paths=train_images, img_size=(256, 256))
+# train_data = listYearbook(True, False)
+# valid_data = listYearbook(False, True)
+#
+# train_images, train_labels = get_data_and_labels(train_data, YEARBOOK_TRAIN_PATH)
+# valid_images, valid_labels = get_data_and_labels(valid_data, YEARBOOK_VALID_PATH)
+#
+# print_mean_of_images(image_paths=train_images, img_size=(256, 256))
