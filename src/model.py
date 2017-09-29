@@ -40,7 +40,7 @@ class YearbookModel:
     def getModel(self, model_architecture='alexnet', load_saved_model=False, model_save_path=None,
                  use_pretraining=False,
                  pretrained_weights_path=None, train_dir=None, val_dir=None, fine_tuning_method=END_TO_END_FINE_TUNING,
-                 batch_size=128, num_epochs=10, optimizer='sgd', loss='mse'):
+                 batch_size=128, num_epochs=10, optimizer='sgd', loss='mse', initial_epoch=0):
 
         """
 
@@ -56,18 +56,13 @@ class YearbookModel:
         :param num_epochs: number of epochs to train the model
         :param optimizer: type of optimizer to use (sgd|adagrad)
         :param loss: type of loss to use (mse|l1)
+        :param initial_epoch: starting epoch to start training
         :return: Returns the corresponding deepnet model
 
         """
 
         if model_architecture not in ARCHITECTURES:
             raise Exception('Invalid architecture name!')
-
-        if load_saved_model:
-            if model_save_path is None:
-                raise Exception('Unable to load trained model as model_weights_path is None!')
-            model = load_model(model_save_path)
-            return model
 
         # get train and validation data
         train_data = listYearbook(True, False)
@@ -83,11 +78,12 @@ class YearbookModel:
                                                            train_dir, val_dir,
                                                            fine_tuning_method,
                                                            batch_size, num_epochs,
-                                                           optimizer, loss)
+                                                           optimizer, loss,
+                                                           initial_epoch)
 
-    def getAlexNet(self, train_images, train_labels, valid_images, valid_labels, model_save_path,
-                   use_pretraining, pretrained_weights_path, train_dir, val_dir, fine_tuning_method,
-                   batch_size, num_epochs, optimizer, loss):
+    def getAlexNet(self, train_images, train_labels, valid_images, valid_labels, load_saved_model,
+                   model_save_path, use_pretraining, pretrained_weights_path, train_dir, val_dir,
+                   fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch):
         """
 
         :param load_saved_model: boolean (whether to just load the model from weights path)
@@ -136,9 +132,9 @@ class YearbookModel:
 
         return model
 
-    def getVGG16(self, train_images, train_labels, valid_images, valid_labels, model_save_path, use_pretraining,
-                 pretrained_weights_path, train_dir,
-                 val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss):
+    def getVGG16(self, train_images, train_labels, valid_images, valid_labels, load_saved_model,
+                 model_save_path, use_pretraining, pretrained_weights_path, train_dir,
+                 val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch):
         """
 
         :param load_saved_model: boolean (whether to just load the model from weights path)
@@ -165,9 +161,14 @@ class YearbookModel:
         processed_train_images = preprocess_image_batch(image_paths=train_images, architecture=VGG16_ARCHITECTURE)
         processed_valid_images = preprocess_image_batch(image_paths=valid_images, architecture=VGG16_ARCHITECTURE)
 
-        model = vgg16_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=NUM_CLASSES,
-                            use_pretraining=use_pretraining, pretrained_weights_path=pretrained_weights_path,
-                            optimizer=optimizer, loss=loss, fine_tuning_method=fine_tuning_method)
+        if load_saved_model:
+            if model_save_path is None:
+                raise Exception('Unable to load trained model as model_weights_path is None!')
+            model = load_model(model_save_path)
+        else:
+            model = vgg16_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=NUM_CLASSES,
+                                use_pretraining=use_pretraining, pretrained_weights_path=pretrained_weights_path,
+                                optimizer=optimizer, loss=loss, fine_tuning_method=fine_tuning_method)
 
         # Start Fine-tuning
         print(get_time_string() + 'Fitting the model..')
@@ -176,7 +177,8 @@ class YearbookModel:
                   nb_epoch=num_epochs,
                   shuffle=True,
                   verbose=1, validation_data=(processed_valid_images, valid_labels),
-                  callbacks=[self.getCheckpointer(model_save_path)]
+                  callbacks=[self.getCheckpointer(model_save_path)],
+                  initial_epoch=initial_epoch
                   )
 
         print(get_time_string() + 'Fitting complete. Returning model..')
@@ -187,9 +189,9 @@ class YearbookModel:
 
         return model
 
-    def getResNet152(self, train_images, train_labels, valid_images, valid_labels, model_save_path, use_pretraining,
-                     pretrained_weights_path, train_dir,
-                     val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss):
+    def getResNet152(self, train_images, train_labels, valid_images, valid_labels, load_saved_model,
+                     model_save_path, use_pretraining, pretrained_weights_path, train_dir,
+                     val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch):
         """
 
         :param load_saved_model: boolean (whether to just load the model from weights path)
@@ -232,9 +234,9 @@ class YearbookModel:
 
         return model
 
-    def getDenseNet169(self, train_images, train_labels, valid_images, valid_labels, model_save_path, use_pretraining,
-                       pretrained_weights_path, train_dir,
-                       val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss):
+    def getDenseNet169(self, train_images, train_labels, valid_images, valid_labels, load_saved_model,
+                       model_save_path, use_pretraining, pretrained_weights_path, train_dir,
+                       val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch):
         """
 
         :param load_saved_model: boolean (whether to just load the model from weights path)
