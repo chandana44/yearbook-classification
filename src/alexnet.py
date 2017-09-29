@@ -8,7 +8,7 @@ from keras.models import Model
 
 from customlayers import crosschannelnormalization, splittensor
 
-from model import *
+from util import *
 from keras.optimizers import SGD
 
 
@@ -83,6 +83,7 @@ def alexnet_model(img_rows, img_cols, channels=1, num_classes=None, use_pretrain
 
     print(get_time_string() + 'Compiling the model..')
     model.compile(optimizer=optimizer, loss=loss)
-    print model.summary()
+
+    print(model.summary())
 
     return model

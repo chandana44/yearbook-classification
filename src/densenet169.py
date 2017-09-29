@@ -12,7 +12,7 @@ from keras.models import Model
 from keras.optimizers import SGD
 
 from customlayers import Scale
-from model import *
+from util import *
 
 
 def densenet169_model(img_rows, img_cols, channels=1, nb_dense_block=4, growth_rate=32,
@@ -113,7 +113,7 @@ def densenet169_model(img_rows, img_cols, channels=1, nb_dense_block=4, growth_r
     sgd = SGD(lr=1e-3, decay=1e-6, momentum=0.9, nesterov=True)
     print(get_time_string() + 'Compiling the model..')
     model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics=['accuracy'])
-    print model.summary()
+    print(model.summary())
 
     return model
 

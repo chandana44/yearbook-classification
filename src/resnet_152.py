@@ -5,7 +5,7 @@ from keras.layers.normalization import BatchNormalization
 from keras.models import Model
 
 from customlayers import Scale
-from util import get_time_string
+from util import *
 
 import sys
 
@@ -157,6 +157,7 @@ def resnet152_model(img_rows, img_cols, color_type=1, num_classes=None, use_pret
     sgd = SGD(lr=1e-3, decay=1e-6, momentum=0.9, nesterov=True)
     print(get_time_string() + 'Compiling the model..')
     model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics=['accuracy'])
-    print model.summary()
+
+    print(model.summary())
 
     return model

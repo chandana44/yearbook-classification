@@ -1,4 +1,4 @@
-from keras import backend as K
+from keras.callbacks import ModelCheckpoint
 from keras.models import load_model
 
 from alexnet import alexnet_model
@@ -6,13 +6,6 @@ from densenet169 import densenet169_model
 from resnet_152 import resnet152_model
 from util import *
 from vgg16 import vgg16_model
-from keras.callbacks import ModelCheckpoint
-
-END_TO_END_FINE_TUNING = 'end-to-end'
-PHASE_BY_PHASE_FINE_TUNING = 'phase-by-phase'
-FREEZE_INITIAL_LAYERS = 'freeze-initial'
-
-FINE_TUNING_METHODS = [END_TO_END_FINE_TUNING, PHASE_BY_PHASE_FINE_TUNING, FREEZE_INITIAL_LAYERS]
 
 
 class YearbookModel:
@@ -24,13 +17,10 @@ class YearbookModel:
         self.get_model_function[RESNET152_ARCHITECTURE] = self.getResNet152
         self.get_model_function[DENSENET169_ARCHITECTURE] = self.getDenseNet169
 
-    def get_l1_loss(self, x, y):
-        return abs(K.argmax(x) - K.argmax(y))
-
     def getCheckpointer(self, model_save_path):
         ext = '.h5'
         path_wo_ext = model_save_path.split(ext)[0]
-        filepath = path_wo_ext + '{epoch:02d}-{val_loss:.2f}' + ext
+        filepath = path_wo_ext + '-{epoch:02d}-{val_loss:.2f}' + ext
 
         checkpointer = ModelCheckpoint(filepath=filepath, verbose=1,
                                        save_best_only=False,
@@ -76,7 +66,9 @@ class YearbookModel:
         processed_train_images = preprocess_image_batch(image_paths=train_images, architecture=model_architecture)
         processed_valid_images = preprocess_image_batch(image_paths=valid_images, architecture=model_architecture)
 
-        return self.get_model_function[model_architecture](processed_train_images, train_labels, processed_valid_images, valid_labels,
+        return self.get_model_function[model_architecture](processed_train_images, train_labels, processed_valid_images,
+                                                           valid_labels,
+                                                           load_saved_model,
                                                            model_save_path,
                                                            use_pretraining,
                                                            pretrained_weights_path,
@@ -102,6 +94,7 @@ class YearbookModel:
         :param num_epochs: number of epochs to train the model
         :param optimizer: type of optimizer to use (sgd|adagrad)
         :param loss: type of loss to use (mse|l1)
+        :param initial_epoch: starting epoch to start training
         :return: Returns the AlexNet model according to the parameters provided
 
         """
@@ -149,6 +142,7 @@ class YearbookModel:
         :param num_epochs: number of epochs to train the model
         :param optimizer: type of optimizer to use (sgd|adagrad)
         :param loss: type of loss to use (mse|l1)
+        :param initial_epoch: starting epoch to start training
         :return: Returns the AlexNet model according to the parameters provided
 
         """
@@ -160,12 +154,17 @@ class YearbookModel:
 
         if load_saved_model:
             if model_save_path is None:
-                raise Exception('Unable to load trained model as model_weights_path is None!')
+                raise Exception('Unable to load trained model as model_save_path is None!')
+            print(get_time_string() + 'Loading saved model from ' + model_save_path + '..')
             model = load_model(model_save_path)
         else:
             model = vgg16_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=NUM_CLASSES,
                                 use_pretraining=use_pretraining, pretrained_weights_path=pretrained_weights_path,
                                 optimizer=optimizer, loss=loss, fine_tuning_method=fine_tuning_method)
+
+        if initial_epoch >= num_epochs:
+            print(get_time_string() + 'Not fitting the model since initial_epoch is >= num_epochs. Returning model..')
+            return model
 
         # Start Fine-tuning
         print(get_time_string() + 'Fitting the model..')
@@ -198,6 +197,7 @@ class YearbookModel:
         :param val_dir: validation data directory
         :param use_pretraining: boolean, whether to use pre-training or train from scratch
         :param fine_tuning_method: whether to use end-to-end pre-training or phase-by-phase pre-training
+        :param initial_epoch: starting epoch to start training
         :return: Returns the AlexNet model according to the parameters provided
 
         """
@@ -227,7 +227,8 @@ class YearbookModel:
 
         return model
 
-    def getDenseNet169(self, processed_train_images, train_labels, processed_valid_images, valid_labels, load_saved_model,
+    def getDenseNet169(self, processed_train_images, train_labels, processed_valid_images, valid_labels,
+                       load_saved_model,
                        model_save_path, use_pretraining, pretrained_weights_path, train_dir,
                        val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch):
         """
@@ -243,6 +244,7 @@ class YearbookModel:
         :param num_epochs: number of epochs to train the model
         :param optimizer: type of optimizer to use (sgd|adagrad)
         :param loss: type of loss to use (mse|l1)
+        :param initial_epoch: starting epoch to start training
         :return: Returns the AlexNet model according to the parameters provided
 
         """
@@ -252,12 +254,21 @@ class YearbookModel:
         img_rows, img_cols = 224, 224  # Resolution of inputs
         channels = 3
 
-        model = densenet169_model(img_rows=img_rows, img_cols=img_cols, channels=channels,
-                                  num_classes=NUM_CLASSES, use_pretraining=use_pretraining,
-                                  pretrained_weights_path=pretrained_weights_path,
-                                  optimizer=optimizer, loss=loss,
-                                  fine_tuning_method=fine_tuning_method)
+        if load_saved_model:
+            if model_save_path is None:
+                raise Exception('Unable to load trained model as model_save_path is None!')
+            print(get_time_string() + 'Loading saved model from ' + model_save_path + '..')
+            model = load_model(model_save_path)
+        else:
+            model = densenet169_model(img_rows=img_rows, img_cols=img_cols, channels=channels,
+                                      num_classes=NUM_CLASSES, use_pretraining=use_pretraining,
+                                      pretrained_weights_path=pretrained_weights_path,
+                                      optimizer=optimizer, loss=loss,
+                                      fine_tuning_method=fine_tuning_method)
 
+        if initial_epoch >= num_epochs:
+            print(get_time_string() + 'Not fitting the model since initial_epoch is >= num_epochs. Returning model..')
+            return model
         # Start Fine-tuning
         print(get_time_string() + 'Fitting the model..')
         model.fit(processed_train_images, train_labels,
@@ -265,7 +276,8 @@ class YearbookModel:
                   nb_epoch=num_epochs,
                   shuffle=True,
                   verbose=1, validation_data=(processed_valid_images, valid_labels),
-                  callbacks=[self.getCheckpointer(model_save_path)]
+                  callbacks=[self.getCheckpointer(model_save_path)],
+                  initial_epoch=initial_epoch
                   )
 
         print(get_time_string() + 'Fitting complete. Returning model..')

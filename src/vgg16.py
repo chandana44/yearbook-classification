@@ -1,7 +1,7 @@
 from keras.layers import Dense, Convolution2D, MaxPooling2D, ZeroPadding2D, Dropout, Flatten
 from keras.models import Sequential
 from keras.optimizers import SGD
-from model import *
+from util import *
 
 
 def vgg16_model(img_rows, img_cols, channels=1, num_classes=None, use_pretraining=True,
@@ -83,6 +83,7 @@ def vgg16_model(img_rows, img_cols, channels=1, num_classes=None, use_pretrainin
 
     print(get_time_string() + 'Compiling the model..')
     model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics=['accuracy'])
-    print model.summary()
+
+    print(model.summary())
 
     return model
