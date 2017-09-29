@@ -101,7 +101,7 @@ class YearbookModel:
 
         print(get_time_string() + 'Creating AlexNet model..')
 
-        img_rows, img_cols = 224, 224  # Resolution of inputs
+        img_rows, img_cols = 227, 227  # Resolution of inputs
         channels = 3
 
         if load_saved_model:
