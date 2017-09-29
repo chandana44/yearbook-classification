@@ -1,4 +1,4 @@
-from keras import backend as K
+from keras.callbacks import ModelCheckpoint
 from keras.models import load_model
 
 from alexnet import alexnet_model
@@ -6,13 +6,6 @@ from densenet169 import densenet169_model
 from resnet_152 import resnet152_model
 from util import *
 from vgg16 import vgg16_model
-from keras.callbacks import ModelCheckpoint
-
-END_TO_END_FINE_TUNING = 'end-to-end'
-PHASE_BY_PHASE_FINE_TUNING = 'phase-by-phase'
-FREEZE_INITIAL_LAYERS = 'freeze-initial'
-
-FINE_TUNING_METHODS = [END_TO_END_FINE_TUNING, PHASE_BY_PHASE_FINE_TUNING, FREEZE_INITIAL_LAYERS]
 
 
 class YearbookModel:
@@ -23,9 +16,6 @@ class YearbookModel:
         self.get_model_function[VGG16_ARCHITECTURE] = self.getVGG16
         self.get_model_function[RESNET152_ARCHITECTURE] = self.getResNet152
         self.get_model_function[DENSENET169_ARCHITECTURE] = self.getDenseNet169
-
-    def get_l1_loss(self, x, y):
-        return abs(K.argmax(x) - K.argmax(y))
 
     def getCheckpointer(self, model_save_path):
         ext = '.h5'

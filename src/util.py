@@ -55,6 +55,11 @@ color_modes = {ALEXNET_ARCHITECTURE: "rgb",
                RESNET152_ARCHITECTURE: "rgb",
                DENSENET169_ARCHITECTURE: "rgb"}
 
+END_TO_END_FINE_TUNING = 'end-to-end'
+PHASE_BY_PHASE_FINE_TUNING = 'phase-by-phase'
+FREEZE_INITIAL_LAYERS = 'freeze-initial'
+
+FINE_TUNING_METHODS = [END_TO_END_FINE_TUNING, PHASE_BY_PHASE_FINE_TUNING, FREEZE_INITIAL_LAYERS]
 
 # Returns formatted current time as string
 def get_time_string():
