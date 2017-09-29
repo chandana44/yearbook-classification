@@ -104,9 +104,15 @@ class YearbookModel:
         img_rows, img_cols = 224, 224  # Resolution of inputs
         channels = 3
 
-        model = alexnet_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=NUM_CLASSES,
-                              use_pretraining=use_pretraining, pretrained_weights_path=pretrained_weights_path,
-                              optimizer=optimizer, loss=loss, fine_tuning_method=fine_tuning_method)
+        if load_saved_model:
+            if model_save_path is None:
+                raise Exception('Unable to load trained model as model_save_path is None!')
+            print(get_time_string() + 'Loading saved model from ' + model_save_path + '..')
+            model = load_model(model_save_path)
+        else:
+            model = alexnet_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=NUM_CLASSES,
+                                  use_pretraining=use_pretraining, pretrained_weights_path=pretrained_weights_path,
+                                  optimizer=optimizer, loss=loss, fine_tuning_method=fine_tuning_method)
 
         # Start Fine-tuning
         print(get_time_string() + 'Fitting the model..')

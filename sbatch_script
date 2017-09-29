@@ -26,4 +26,4 @@ num_epochs=5
 optimizer='sgd'
 loss='categorical_crossentropy'
 
-./run.sh --DATASET_TYPE=yearbook --type=valid --model_architecture=$architecture --load_saved_model=$continue_previous_run --checkpoint_file_name=$checkpoint --use_pretraining=$use_pretraining --fine_tuning_method=$fine_tuning --batch_size=$batch_size --num_epochs=$num_epochs --loss=$loss --optimizer=$optimizer --inital_epoch=$initial_epoch
+./run.sh --DATASET_TYPE=yearbook --type=valid --model_architecture=$architecture --load_saved_model=$continue_previous_run --checkpoint_file_name=$checkpoint --use_pretraining=$use_pretraining --fine_tuning_method=$fine_tuning --batch_size=$batch_size --num_epochs=$num_epochs --loss=$loss --optimizer=$optimizer --initial_epoch=$initial_epoch

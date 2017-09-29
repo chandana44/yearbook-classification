@@ -62,6 +62,7 @@ FREEZE_INITIAL_LAYERS = 'freeze-initial'
 
 FINE_TUNING_METHODS = [END_TO_END_FINE_TUNING, PHASE_BY_PHASE_FINE_TUNING, FREEZE_INITIAL_LAYERS]
 
+
 # Returns formatted current time as string
 def get_time_string():
     return time.strftime('%c') + ' '
@@ -190,7 +191,7 @@ def preprocess_image_batch(image_paths, architecture, out=None):
 
     """
     img_list = []
-    rgb_mean = print_mean_of_images(image_paths, image_sizes[architecture])
+    rgb_mean = calculate_mean_of_images(image_paths, image_sizes[architecture])
     for im_path in image_paths:
         img = imread(im_path, mode='RGB')
         img_size = image_sizes[architecture]
@@ -200,7 +201,7 @@ def preprocess_image_batch(image_paths, architecture, out=None):
         img = img.astype('float32')
         # We normalize the colors (in RGB space) with the empirical means on the training set
         img[:, :, 0] -= rgb_mean[0]
-        img[:, :, 1] -= rgb_mean[1] 
+        img[:, :, 1] -= rgb_mean[1]
         img[:, :, 2] -= rgb_mean[2]
         # We permute the colors to get them in the BGR order
         color_mode = color_modes[architecture]
@@ -249,7 +250,7 @@ def is_using_gpu():
         return True
 
 
-def print_mean_of_images(image_paths, img_size=None):
+def calculate_mean_of_images(image_paths, img_size=None):
     """
     Consistent preprocessing of images batches
 
@@ -269,20 +270,17 @@ def print_mean_of_images(image_paths, img_size=None):
             img = imresize(img, img_size)
 
         img = img.astype('float32')
-	#print 'image shape: ', img.shape
         # np.avg
-        local_sums = np.mean(img, axis=(0,1))
-	#print 'local sums shape: ', local_sums.shape
-	#print 'global sums shape: ', global_sums.shape
+        local_sums = np.mean(img, axis=(0, 1))  # image is (256,256,3) hence mean across (0,1)
         global_sums += local_sums
 
-        #if count % 100 == 0:
-         #   print(str(count) + ' of ' + str(len(image_paths)) + ' complete.')
+        # if count % 100 == 0:
+        #   print(str(count) + ' of ' + str(len(image_paths)) + ' complete.')
 
-    print(global_sums)
-    print 'images mean:'
-    print(global_sums/count)
-    return (global_sums/count)
+    print 'images mean: ',
+    print(global_sums / count)
+    return (global_sums / count)
+
 # train_data = listYearbook(True, False)
 # valid_data = listYearbook(False, True)
 #
