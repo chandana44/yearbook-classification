@@ -155,6 +155,7 @@ class YearbookModel:
         if load_saved_model:
             if model_save_path is None:
                 raise Exception('Unable to load trained model as model_weights_path is None!')
+            print(get_time_string() + 'Loading saved model from ' + model_save_path + '..')
             model = load_model(model_save_path)
         else:
             model = vgg16_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=NUM_CLASSES,
