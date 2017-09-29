@@ -83,5 +83,6 @@ def vgg16_model(img_rows, img_cols, channels=1, num_classes=None, use_pretrainin
 
     print(get_time_string() + 'Compiling the model..')
     model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics=['accuracy'])
+    print model.summary()
 
     return model
