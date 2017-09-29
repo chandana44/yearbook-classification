@@ -190,7 +190,7 @@ def preprocess_image_batch(image_paths, architecture, out=None):
 
     """
     img_list = []
-
+    rgb_mean = print_mean_of_images(image_paths, image_sizes[architecture])
     for im_path in image_paths:
         img = imread(im_path, mode='RGB')
         img_size = image_sizes[architecture]
@@ -199,9 +199,9 @@ def preprocess_image_batch(image_paths, architecture, out=None):
 
         img = img.astype('float32')
         # We normalize the colors (in RGB space) with the empirical means on the training set
-        img[:, :, 0] -= 123.68
-        img[:, :, 1] -= 116.779
-        img[:, :, 2] -= 103.939
+        img[:, :, 0] -= rgb_mean[0]
+        img[:, :, 1] -= rgb_mean[1] 
+        img[:, :, 2] -= rgb_mean[2]
         # We permute the colors to get them in the BGR order
         color_mode = color_modes[architecture]
         if color_mode == 'bgr':
@@ -249,7 +249,7 @@ def is_using_gpu():
         return True
 
 
-def print_mean_of_images(image_paths, img_size=None, crop_size=None, color_mode='rgb', out=None):
+def print_mean_of_images(image_paths, img_size=None):
     """
     Consistent preprocessing of images batches
 
@@ -259,9 +259,8 @@ def print_mean_of_images(image_paths, img_size=None, crop_size=None, color_mode=
     :param color_mode: Use rgb or change to bgr mode based on type of model you want to use
     :param out: append output to this iterable if specified
     """
-    img_list = []
 
-    global_sums = [0, 0, 0]
+    global_sums = np.zeros(3)
     count = 0
     for im_path in image_paths:
         count += 1
@@ -270,25 +269,20 @@ def print_mean_of_images(image_paths, img_size=None, crop_size=None, color_mode=
             img = imresize(img, img_size)
 
         img = img.astype('float32')
-        # We normalize the colors (in RGB space) with the empirical means on the training set
-        # img[:, :, 0] -= 123.68
-        # img[:, :, 1] -= 116.779
-        # img[:, :, 2] -= 103.939
-
+	#print 'image shape: ', img.shape
         # np.avg
-        local_sums = np.mean(img, axis=0)
-        # for i in range(len(local_sums)):
+        local_sums = np.mean(img, axis=(0,1))
+	#print 'local sums shape: ', local_sums.shape
+	#print 'global sums shape: ', global_sums.shape
+        global_sums += local_sums
 
-        global_sums[0] += local_sums[0]
-        global_sums[1] += local_sums[1]
-        global_sums[2] += local_sums[2]
-
-        if count % 100 == 0:
-            print(str(count) + ' of ' + str(len(image_paths)) + ' complete.')
+        #if count % 100 == 0:
+         #   print(str(count) + ' of ' + str(len(image_paths)) + ' complete.')
 
     print(global_sums)
-    print(global_sums[0]/count, global_sums[1]/count, global_sums[2]/count)
-
+    print 'images mean:'
+    print(global_sums/count)
+    return (global_sums/count)
 # train_data = listYearbook(True, False)
 # valid_data = listYearbook(False, True)
 #

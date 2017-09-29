@@ -73,7 +73,7 @@ def alexnet_model(img_rows, img_cols, channels=1, num_classes=None, use_pretrain
 
     if fine_tuning_method == FREEZE_INITIAL_LAYERS:
         print(get_time_string() + 'Freezing initial 5 layers of the network..')
-        for layer in model.layers[:5]:
+        for layer in model.layers[:28]:
            layer.trainable = False
 
     if optimizer == 'sgd':
