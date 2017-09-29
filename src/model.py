@@ -62,6 +62,7 @@ class YearbookModel:
         valid_images, valid_labels = get_data_and_labels(valid_data, YEARBOOK_VALID_PATH)
 
         return self.get_model_function[model_architecture](train_images, train_labels, valid_images, valid_labels,
+                                                           load_saved_model,
                                                            model_save_path,
                                                            use_pretraining,
                                                            pretrained_weights_path,
