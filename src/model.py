@@ -161,7 +161,11 @@ class YearbookModel:
         prediction = Activation('softmax', name='softmax')(last)
 
         model = Model(model.input, prediction)
-
+	print model.summary()
+	
+	print 'number of layers: '+str(len(model.layers))
+	for layer in model.layers[:28]:
+    		layer.trainable = False
         print(get_time_string() + 'Compiling the model..')
         if loss == 'l1':
             model.compile(optimizer=optimizer, loss=self.get_l1_loss)
