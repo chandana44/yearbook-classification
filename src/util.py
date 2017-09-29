@@ -6,6 +6,7 @@ import numpy as np
 from scipy.misc import imread
 from scipy.misc import imresize
 from theano import function, config, shared, tensor
+from keras import backend as K
 
 # If you want this to work do not move this file
 SRC_PATH = path.dirname(path.abspath(__file__))

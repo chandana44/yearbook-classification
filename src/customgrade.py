@@ -118,6 +118,9 @@ if __name__ == "__main__":
     if args.fine_tuning_method is not None and args.fine_tuning_method not in FINE_TUNING_METHODS:
         raise Exception('Invalid fine_tuning_method specified!')
 
+    if not args.checkpoint_file_name.endswith('.h5'):
+        raise Exception('Checkpoint file should end with h5 format!')
+
     if args.dataset_type == 'yearbook':
         model = YearbookModel()
         trained_model = model.getModel(model_architecture=args.model_architecture,

@@ -6,6 +6,7 @@ from densenet169 import densenet169_model
 from resnet_152 import resnet152_model
 from util import *
 from vgg16 import vgg16_model
+from keras.callbacks import ModelCheckpoint
 
 END_TO_END_FINE_TUNING = 'end-to-end'
 PHASE_BY_PHASE_FINE_TUNING = 'phase-by-phase'
@@ -25,6 +26,16 @@ class YearbookModel:
 
     def get_l1_loss(self, x, y):
         return abs(K.argmax(x) - K.argmax(y))
+
+    def getCheckpointer(self, model_save_path):
+        ext = '.h5'
+        path_wo_ext = model_save_path.split(ext)[0]
+        filepath = path_wo_ext + '{epoch:02d}-{val_loss:.2f}' + ext
+
+        checkpointer = ModelCheckpoint(filepath=filepath, verbose=1,
+                                       save_best_only=False,
+                                       save_weights_only=False)
+        return checkpointer
 
     def getModel(self, model_architecture='alexnet', load_saved_model=False, model_save_path=None,
                  use_pretraining=False,
@@ -114,6 +125,7 @@ class YearbookModel:
                   nb_epoch=num_epochs,
                   shuffle=True,
                   verbose=1, validation_data=(processed_valid_images, valid_labels),
+                  callbacks=[self.getCheckpointer(model_save_path)]
                   )
 
         print(get_time_string() + 'Fitting complete. Returning model..')
@@ -164,6 +176,7 @@ class YearbookModel:
                   nb_epoch=num_epochs,
                   shuffle=True,
                   verbose=1, validation_data=(processed_valid_images, valid_labels),
+                  callbacks=[self.getCheckpointer(model_save_path)]
                   )
 
         print(get_time_string() + 'Fitting complete. Returning model..')
@@ -208,6 +221,7 @@ class YearbookModel:
                   nb_epoch=num_epochs,
                   shuffle=True,
                   verbose=1, validation_data=(processed_valid_images, valid_labels),
+                  callbacks=[self.getCheckpointer(model_save_path)]
                   )
 
         print(get_time_string() + 'Fitting complete. Returning model..')
@@ -260,6 +274,7 @@ class YearbookModel:
                   nb_epoch=num_epochs,
                   shuffle=True,
                   verbose=1, validation_data=(processed_valid_images, valid_labels),
+                  callbacks=[self.getCheckpointer(model_save_path)]
                   )
 
         print(get_time_string() + 'Fitting complete. Returning model..')
