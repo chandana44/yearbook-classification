@@ -1,6 +1,4 @@
-from keras import applications
-from keras import optimizers
-from keras.preprocessing.image import ImageDataGenerator
+from keras import backend as K
 from keras.layers import Activation, Convolution2D
 from keras.layers import Dropout, Flatten, Dense
 from keras.layers import Input
@@ -9,11 +7,11 @@ from keras.layers.convolutional import MaxPooling2D
 from keras.layers.convolutional import ZeroPadding2D
 from keras.models import Model
 from keras.models import load_model
-from keras import backend as K
 
 from customlayers import crosschannelnormalization, splittensor
-from util import *
 from resnet_152 import resnet152_model
+from vgg16 import vgg16_model
+from util import *
 
 END_TO_END_FINE_TUNING = 'end-to-end'
 PHASE_BY_PHASE_FINE_TUNING = 'phase-by-phase'
@@ -81,9 +79,9 @@ class YearbookModel:
                                                            batch_size, num_epochs,
                                                            optimizer, loss)
 
-    def getAlexNet(self, train_images, train_labels, valid_images, valid_labels, model_save_path, use_pretraining,
-                   pretrained_weights_path,
-                   train_dir, val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss):
+    def getAlexNet(self, train_images, train_labels, valid_images, valid_labels, model_save_path,
+                   use_pretraining, pretrained_weights_path, train_dir, val_dir, fine_tuning_method,
+                   batch_size, num_epochs, optimizer, loss):
         """
 
         :param load_saved_model: boolean (whether to just load the model from weights path)
@@ -163,6 +161,7 @@ class YearbookModel:
         model = Model(model.input, prediction)
 
         print(get_time_string() + 'Compiling the model..')
+
         if loss == 'l1':
             model.compile(optimizer=optimizer, loss=self.get_l1_loss)
         else:
@@ -200,45 +199,35 @@ class YearbookModel:
 
         """
 
-        batch_size = 16
-        img_height = 224
-        img_width = 224
-        num_epochs = 10
-        samples_per_epoch = 2000
-        nb_val_samples = 800
+        print(get_time_string() + 'Creating VGG16 model..')
 
-        model = applications.VGG16(weights=None, classes=NUM_CLASSES)
+        img_rows, img_cols = 224, 224  # Resolution of inputs
+        channels = 3
 
-        model.compile(optimizer=optimizers.SGD(lr=1e-4, momentum=0.9),
-                      loss="mean_absolute_error")
+        # Preprocessing images
+        processed_train_images = preprocess_image_batch(image_paths=train_images, architecture=VGG16_ARCHITECTURE)
+        processed_valid_images = preprocess_image_batch(image_paths=valid_images, architecture=VGG16_ARCHITECTURE)
 
-        train_datagen = ImageDataGenerator(
-            rescale=1. / 255,
-            shear_range=0.2,
-            zoom_range=0.2,
-            horizontal_flip=True)
+        model = vgg16_model(img_rows=img_rows, img_cols=img_cols, channel=channels, num_classes=NUM_CLASSES,
+                            use_pretraining=use_pretraining, pretrained_weights_path=pretrained_weights_path,
+                            optimizer=optimizer, loss=loss)
 
-        test_datagen = ImageDataGenerator(rescale=1. / 255)
+        # Start Fine-tuning
+        print(get_time_string() + 'Fitting the model..')
+        model.fit(processed_train_images, train_labels,
+                  batch_size=batch_size,
+                  nb_epoch=num_epochs,
+                  shuffle=True,
+                  verbose=1, validation_data=(processed_valid_images, valid_labels),
+                  )
 
-        train_generator = train_datagen.flow_from_directory(
-            train_dir,
-            target_size=(img_height, img_width),
-            batch_size=batch_size)
+        print(get_time_string() + 'Fitting complete. Returning model..')
 
-        validation_generator = test_datagen.flow_from_directory(
-            val_dir,
-            target_size=(img_height, img_width),
-            batch_size=batch_size)
+        if model_save_path is not None:
+            print(get_time_string() + 'Saving model weights to ' + model_save_path + '..')
+            model.save(model_save_path)
 
-        # fine-tune the model
-        model.fit_generator(
-            train_generator,
-            samples_per_epoch=samples_per_epoch,
-            epochs=num_epochs,
-            validation_data=validation_generator,
-            nb_val_samples=nb_val_samples)
-
-        return None
+        return model
 
     def getResNet152(self, train_images, train_labels, valid_images, valid_labels, model_save_path, use_pretraining,
                      pretrained_weights_path, train_dir,
