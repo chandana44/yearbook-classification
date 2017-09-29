@@ -21,12 +21,14 @@ STREETVIEW_TEST_LABEL_PATH = path.join(SRC_PATH, '..', 'output', 'geo_test_label
 
 CHECKPOINT_BASE_DIR = '../checkpoint/'
 ALEXNET_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/alexnet_weights.h5'
-VGG16_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/vgg16_weights.h5'
+VGG16_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/vgg16_weights_th_dim_ordering_th_kernels.h5'
 RESNET152_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/resnet152_weights.h5'
+DENSENET169_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/densenet169_weights_th.h5'
 
 pretrained_weights_path_map = {ALEXNET_ARCHITECTURE: ALEXNET_PRETRAINED_WEIGHT_PATH,
                                VGG16_ARCHITECTURE: VGG16_PRETRAINED_WEIGHT_PATH,
-                               RESNET152_ARCHITECTURE: RESNET152_PRETRAINED_WEIGHT_PATH}
+                               RESNET152_ARCHITECTURE: RESNET152_PRETRAINED_WEIGHT_PATH,
+                               DENSENET169_ARCHITECTURE: DENSENET169_PRETRAINED_WEIGHT_PATH}
 
 
 # Evaluate L1 distance on valid data for yearbook dataset
@@ -115,6 +117,9 @@ if __name__ == "__main__":
 
     if args.fine_tuning_method is not None and args.fine_tuning_method not in FINE_TUNING_METHODS:
         raise Exception('Invalid fine_tuning_method specified!')
+
+    if not args.checkpoint_file_name.endswith('.h5'):
+        raise Exception('Checkpoint file should end with h5 format!')
 
     if args.dataset_type == 'yearbook':
         model = YearbookModel()

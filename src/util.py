@@ -6,6 +6,7 @@ import numpy as np
 from scipy.misc import imread
 from scipy.misc import imresize
 from theano import function, config, shared, tensor
+from keras import backend as K
 
 # If you want this to work do not move this file
 SRC_PATH = path.dirname(path.abspath(__file__))
@@ -30,29 +31,38 @@ ALEXNET_ARCHITECTURE = 'alexnet'
 VGG16_ARCHITECTURE = 'vgg16'
 VGG19_ARCHITECTURE = 'vgg19'
 RESNET152_ARCHITECTURE = 'resnet152'
+DENSENET169_ARCHITECTURE = 'densenet169'
 
-ARCHITECTURES = [ALEXNET_ARCHITECTURE, VGG16_ARCHITECTURE, VGG19_ARCHITECTURE, RESNET152_ARCHITECTURE]
+ARCHITECTURES = [ALEXNET_ARCHITECTURE,
+                 VGG16_ARCHITECTURE,
+                 VGG19_ARCHITECTURE,
+                 RESNET152_ARCHITECTURE,
+                 DENSENET169_ARCHITECTURE]
 
 # dictionary for arcitectures-image sizes
-image_sizes = {}
-image_sizes[ALEXNET_ARCHITECTURE] = (256, 256)
-image_sizes[VGG16_ARCHITECTURE] = None  # chandu check
-image_sizes[RESNET152_ARCHITECTURE] = (256, 256)
+image_sizes = {ALEXNET_ARCHITECTURE: (256, 256),
+               VGG16_ARCHITECTURE: (224, 224),
+               RESNET152_ARCHITECTURE: (256, 256),
+               DENSENET169_ARCHITECTURE: (224, 224)}
 
-crop_sizes = {}
-crop_sizes[ALEXNET_ARCHITECTURE] = (227, 227)
-crop_sizes[VGG16_ARCHITECTURE] = (224, 224)
-crop_sizes[RESNET152_ARCHITECTURE] = (224, 224)
+crop_sizes = {ALEXNET_ARCHITECTURE: (227, 227),
+              VGG16_ARCHITECTURE: None,
+              RESNET152_ARCHITECTURE: (224, 224),
+              DENSENET169_ARCHITECTURE: None}
 
-color_modes = {}
-color_modes[ALEXNET_ARCHITECTURE] = "rgb"
-color_modes[VGG16_ARCHITECTURE] = ""
-color_modes[RESNET152_ARCHITECTURE] = "rgb"
+color_modes = {ALEXNET_ARCHITECTURE: "rgb",
+               VGG16_ARCHITECTURE: "rgb",
+               RESNET152_ARCHITECTURE: "rgb",
+               DENSENET169_ARCHITECTURE: "rgb"}
 
 
 # Returns formatted current time as string
 def get_time_string():
     return time.strftime('%c') + ' '
+
+
+def get_l1_loss(self, x, y):
+    return abs(K.argmax(x) - K.argmax(y))
 
 
 # Get the label for a file
@@ -158,13 +168,12 @@ def get_data_and_labels(data, base_path):
 
 def preprocess_image_batch(image_paths, architecture, out=None):
     """
-    Consistent preprocessing of images batches
+    Consistent pre-processing of images batches
 
+    :param architecture: type of architecture (Resnet|VGG16|AlexNet)
     :param image_paths: iterable: images to process
-    :param crop_size: tuple: crop images if specified
-    :param img_size: tuple: resize images if specified
-    :param color_mode: Use rgb or change to bgr mode based on type of model you want to use
     :param out: append output to this iterable if specified
+
     """
     img_list = []
 
@@ -238,7 +247,10 @@ def print_mean_of_images(image_paths, img_size=None, crop_size=None, color_mode=
     """
     img_list = []
 
+    global_sums = [0, 0, 0]
+    count = 0
     for im_path in image_paths:
+        count += 1
         img = imread(im_path, mode='RGB')
         if img_size:
             img = imresize(img, img_size)
@@ -249,5 +261,24 @@ def print_mean_of_images(image_paths, img_size=None, crop_size=None, color_mode=
         # img[:, :, 1] -= 116.779
         # img[:, :, 2] -= 103.939
 
-        local_sums = np.sum(img, axis=0)
-        print(local_sums)
+        # np.avg
+        local_sums = np.mean(img, axis=0)
+        # for i in range(len(local_sums)):
+
+        global_sums[0] += local_sums[0]
+        global_sums[1] += local_sums[1]
+        global_sums[2] += local_sums[2]
+
+        if count % 100 == 0:
+            print(str(count) + ' of ' + str(len(image_paths)) + ' complete.')
+
+    print(global_sums)
+    print(global_sums[0]/count, global_sums[1]/count, global_sums[2]/count)
+
+# train_data = listYearbook(True, False)
+# valid_data = listYearbook(False, True)
+#
+# train_images, train_labels = get_data_and_labels(train_data, YEARBOOK_TRAIN_PATH)
+# valid_images, valid_labels = get_data_and_labels(valid_data, YEARBOOK_VALID_PATH)
+#
+# print_mean_of_images(image_paths=train_images, img_size=(256, 256))
