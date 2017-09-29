@@ -20,7 +20,7 @@ class YearbookModel:
     def getCheckpointer(self, model_save_path):
         ext = '.h5'
         path_wo_ext = model_save_path.split(ext)[0]
-        filepath = path_wo_ext + '{epoch:02d}-{val_loss:.2f}' + ext
+        filepath = path_wo_ext + '-{epoch:02d}-{val_loss:.2f}' + ext
 
         checkpointer = ModelCheckpoint(filepath=filepath, verbose=1,
                                        save_best_only=False,
