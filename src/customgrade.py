@@ -84,6 +84,9 @@ if __name__ == "__main__":
     parser.add_argument("--load_saved_model", dest="load_saved_model",
                         help="load_saved_model: Whether to use saved model",
                         required=False, default=0, type=int)
+    parser.add_argument("--initial_epoch", dest="initial_epoch",
+                        help="initial_epoch: Epoch to start training from",
+                        required=False, default=0, type=int)
     parser.add_argument("--checkpoint_file_name", dest="checkpoint_file_name",
                         help="checkpoint_file_name: h5 file name to save to/load from", required=True)
 
@@ -130,7 +133,8 @@ if __name__ == "__main__":
                                        pretrained_weights_path=pretrained_weights_path_map[args.model_architecture],
                                        train_dir=None, val_dir=None, fine_tuning_method=args.fine_tuning_method,
                                        batch_size=args.batch_size, num_epochs=args.num_epochs,
-                                       optimizer=args.optimizer, loss=args.loss)
+                                       optimizer=args.optimizer, loss=args.loss,
+                                       initial_epoch=args.initial_epoch)
         if args.type == 'valid':
             evaluateYearbookFromModel(trained_model, args.model_architecture)
         elif args.type == 'test':
