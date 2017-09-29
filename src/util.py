@@ -30,24 +30,29 @@ ALEXNET_ARCHITECTURE = 'alexnet'
 VGG16_ARCHITECTURE = 'vgg16'
 VGG19_ARCHITECTURE = 'vgg19'
 RESNET152_ARCHITECTURE = 'resnet152'
+DENSENET169_ARCHITECTURE = 'densenet169'
 
-ARCHITECTURES = [ALEXNET_ARCHITECTURE, VGG16_ARCHITECTURE, VGG19_ARCHITECTURE, RESNET152_ARCHITECTURE]
+ARCHITECTURES = [ALEXNET_ARCHITECTURE,
+                 VGG16_ARCHITECTURE,
+                 VGG19_ARCHITECTURE,
+                 RESNET152_ARCHITECTURE,
+                 DENSENET169_ARCHITECTURE]
 
 # dictionary for arcitectures-image sizes
-image_sizes = {}
-image_sizes[ALEXNET_ARCHITECTURE] = (256, 256)
-image_sizes[VGG16_ARCHITECTURE] = (224, 224)
-image_sizes[RESNET152_ARCHITECTURE] = (256, 256)
+image_sizes = {ALEXNET_ARCHITECTURE: (256, 256),
+               VGG16_ARCHITECTURE: (224, 224),
+               RESNET152_ARCHITECTURE: (256, 256),
+               DENSENET169_ARCHITECTURE: (224, 224)}
 
-crop_sizes = {}
-crop_sizes[ALEXNET_ARCHITECTURE] = (227, 227)
-crop_sizes[VGG16_ARCHITECTURE] = None
-crop_sizes[RESNET152_ARCHITECTURE] = (224, 224)
+crop_sizes = {ALEXNET_ARCHITECTURE: (227, 227),
+              VGG16_ARCHITECTURE: None,
+              RESNET152_ARCHITECTURE: (224, 224),
+              DENSENET169_ARCHITECTURE: None}
 
-color_modes = {}
-color_modes[ALEXNET_ARCHITECTURE] = "rgb"
-color_modes[VGG16_ARCHITECTURE] = "rgb"
-color_modes[RESNET152_ARCHITECTURE] = "rgb"
+color_modes = {ALEXNET_ARCHITECTURE: "rgb",
+               VGG16_ARCHITECTURE: "rgb",
+               RESNET152_ARCHITECTURE: "rgb",
+               DENSENET169_ARCHITECTURE: "rgb"}
 
 
 # Returns formatted current time as string
