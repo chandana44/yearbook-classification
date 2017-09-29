@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH -J yearbook5_20_epochs_128_l1           # job namu
-#SBATCH -o yearbook5_20_epochs_128_l1.o%j       # output and error file name (%j expands to jobID)
+#SBATCH -J yearbook10_densenet_5_epochs_32_cc           # job namu
+#SBATCH -o yearbook10_densenet_5_epochs_32_cc.o%j       # output and error file name (%j expands to jobID)
 #SBATCH -n 1 -N 1               # total number of mpi tasks requested
 #SBATCH -p gpu     # queue (partition) -- normal, development, etc.
 #SBATCH -t 12:00:00        # run time (hh:mm:ss) - 1.5 hours
@@ -8,4 +8,22 @@
 #SBATCH --mail-type=begin  # email me when the job starts
 #SBATCH --mail-type=end    # email me when the job finishes
 
-./run.sh --DATASET_TYPE=yearbook --type=valid --model_architecture=alexnet --load_saved_model=0 --checkpoint_file_name=checkpoint5.h5 --use_pretraining=1 --fine_tuning_method=end-to-end --batch_size=128 --num_epochs=20 --loss=l1 --optimizer=sgd
+run=10
+# Make sure to change the job name and output log file name in the above SBATCH directives
+architecture='alexnet'
+
+# Whether to continue from previously saved model (you might want to change initial_epoch also)
+continue_previous_run=0
+initial_epoch=0
+
+checkpoint='checkpoint'$run'.h5'
+use_pretraining=1
+fine_tuning='freeze-initial'
+
+# Training parameters
+batch_size=32
+num_epochs=5
+optimizer='sgd'
+loss='categorical_crossentropy'
+
+./run.sh --DATASET_TYPE=yearbook --type=valid --model_architecture=$architecture --load_saved_model=$continue_previous_run --checkpoint_file_name=$checkpoint --use_pretraining=$use_pretraining --fine_tuning_method=$fine_tuning --batch_size=$batch_size --num_epochs=$num_epochs --loss=$loss --optimizer=$optimizer --inital_epoch=$initial_epoch
