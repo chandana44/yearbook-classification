@@ -41,7 +41,7 @@ image_sizes[RESNET152_ARCHITECTURE] = (256, 256)
 
 crop_sizes = {}
 crop_sizes[ALEXNET_ARCHITECTURE] = (227, 227)
-crop_sizes[VGG16_ARCHITECTURE] = (224, 224)
+crop_sizes[VGG16_ARCHITECTURE] = None
 crop_sizes[RESNET152_ARCHITECTURE] = (224, 224)
 
 color_modes = {}
