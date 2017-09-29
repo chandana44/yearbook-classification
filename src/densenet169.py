@@ -1,20 +1,25 @@
 # -*- coding: utf-8 -*-
 
-import keras.backend as K
-from customlayers import Scale
-from keras.layers import Input, merge, ZeroPadding2D
-from keras.layers.convolutional import Convolution2D
-from keras.layers.core import Dense, Dropout, Activation
+from keras.layers import Activation, Convolution2D
+from keras.layers import Dropout, Dense
+from keras.layers import Input
+from keras.layers import merge
+from keras.layers.convolutional import MaxPooling2D
+from keras.layers.convolutional import ZeroPadding2D
 from keras.layers.normalization import BatchNormalization
-from keras.layers.pooling import AveragePooling2D, GlobalAveragePooling2D, MaxPooling2D
+from keras.layers.pooling import AveragePooling2D, GlobalAveragePooling2D
 from keras.models import Model
 from keras.optimizers import SGD
+
+from customlayers import Scale
+from model import *
 
 
 def densenet169_model(img_rows, img_cols, channels=1, nb_dense_block=4, growth_rate=32,
                       nb_filter=64, reduction=0.5, dropout_rate=0.0, weight_decay=1e-4,
                       num_classes=None, use_pretraining=True,
-                      pretrained_weights_path=None, optimizer=None, loss=None):
+                      pretrained_weights_path=None, optimizer=None, loss=None,
+                      fine_tuning_method=END_TO_END_FINE_TUNING):
     '''
     DenseNet 169 Model for Keras
 
@@ -106,6 +111,7 @@ def densenet169_model(img_rows, img_cols, channels=1, nb_dense_block=4, growth_r
 
     # Learning rate is changed to 0.001
     sgd = SGD(lr=1e-3, decay=1e-6, momentum=0.9, nesterov=True)
+    print(get_time_string() + 'Compiling the model..')
     model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics=['accuracy'])
 
     return model

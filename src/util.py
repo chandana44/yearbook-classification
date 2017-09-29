@@ -60,6 +60,10 @@ def get_time_string():
     return time.strftime('%c') + ' '
 
 
+def get_l1_loss(self, x, y):
+    return abs(K.argmax(x) - K.argmax(y))
+
+
 # Get the label for a file
 # For yearbook this returns a year
 # For streetview this returns a (longitude, latitude) pair

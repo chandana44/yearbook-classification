@@ -1,27 +1,20 @@
 from keras import backend as K
-from keras.layers import Activation, Convolution2D
-from keras.layers import Dropout, Flatten, Dense
-from keras.layers import Input
-from keras.layers import merge
-from keras.layers.convolutional import MaxPooling2D
-from keras.layers.convolutional import ZeroPadding2D
-from keras.models import Model
 from keras.models import load_model
 
-from customlayers import crosschannelnormalization, splittensor
-from resnet_152 import resnet152_model
-from vgg16 import vgg16_model
+from alexnet import alexnet_model
 from densenet169 import densenet169_model
+from resnet_152 import resnet152_model
 from util import *
+from vgg16 import vgg16_model
 
 END_TO_END_FINE_TUNING = 'end-to-end'
 PHASE_BY_PHASE_FINE_TUNING = 'phase-by-phase'
+FREEZE_INITIAL_LAYERS = 'freeze-initial'
 
-FINE_TUNING_METHODS = [END_TO_END_FINE_TUNING, PHASE_BY_PHASE_FINE_TUNING]
+FINE_TUNING_METHODS = [END_TO_END_FINE_TUNING, PHASE_BY_PHASE_FINE_TUNING, FREEZE_INITIAL_LAYERS]
 
 
 class YearbookModel:
-    FINE_TUNING_METHODS = ['end-to-end', 'phase-by-phase']
     get_model_function = {}
 
     def __init__(self):
@@ -103,75 +96,25 @@ class YearbookModel:
 
         print(get_time_string() + 'Creating AlexNet model..')
 
+        img_rows, img_cols = 224, 224  # Resolution of inputs
+        channels = 3
+
         # Preprocessing images
-        processed_train_images = preprocess_image_batch(image_paths=train_images, architecture=ALEXNET_ARCHITECTURE)
-        processed_valid_images = preprocess_image_batch(image_paths=valid_images, architecture=ALEXNET_ARCHITECTURE)
+        processed_train_images = preprocess_image_batch(image_paths=train_images, architecture=VGG16_ARCHITECTURE)
+        processed_valid_images = preprocess_image_batch(image_paths=valid_images, architecture=VGG16_ARCHITECTURE)
 
-        inputs = Input(shape=(3, 227, 227))
-        conv_1 = Convolution2D(96, 11, 11, subsample=(4, 4), activation='relu',
-                               name='conv_1')(inputs)
+        model = alexnet_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=NUM_CLASSES,
+                              use_pretraining=use_pretraining, pretrained_weights_path=pretrained_weights_path,
+                              optimizer=optimizer, loss=loss, fine_tuning_method=fine_tuning_method)
 
-        conv_2 = MaxPooling2D((3, 3), strides=(2, 2))(conv_1)
-        conv_2 = crosschannelnormalization(name='convpool_1')(conv_2)
-        conv_2 = ZeroPadding2D((2, 2))(conv_2)
-        conv_2 = merge([
-            Convolution2D(128, 5, 5, activation='relu', name='conv_2_' + str(i + 1))(
-                splittensor(ratio_split=2, id_split=i)(conv_2)
-            ) for i in range(2)], mode='concat', concat_axis=1, name='conv_2')
-
-        conv_3 = MaxPooling2D((3, 3), strides=(2, 2))(conv_2)
-        conv_3 = crosschannelnormalization()(conv_3)
-        conv_3 = ZeroPadding2D((1, 1))(conv_3)
-        conv_3 = Convolution2D(384, 3, 3, activation='relu', name='conv_3')(conv_3)
-
-        conv_4 = ZeroPadding2D((1, 1))(conv_3)
-        conv_4 = merge([
-            Convolution2D(192, 3, 3, activation='relu', name='conv_4_' + str(i + 1))(
-                splittensor(ratio_split=2, id_split=i)(conv_4)
-            ) for i in range(2)], mode='concat', concat_axis=1, name='conv_4')
-
-        conv_5 = ZeroPadding2D((1, 1))(conv_4)
-        conv_5 = merge([
-            Convolution2D(128, 3, 3, activation='relu', name='conv_5_' + str(i + 1))(
-                splittensor(ratio_split=2, id_split=i)(conv_5)
-            ) for i in range(2)], mode='concat', concat_axis=1, name='conv_5')
-
-        dense_1 = MaxPooling2D((3, 3), strides=(2, 2), name='convpool_5')(conv_5)
-        dense_1 = Flatten(name='flatten')(dense_1)
-        dense_1 = Dense(4096, activation='relu', name='dense_1')(dense_1)
-        dense_2 = Dropout(0.5)(dense_1)
-        dense_2 = Dense(4096, activation='relu', name='dense_2')(dense_2)
-        dense_3 = Dropout(0.5)(dense_2)
-        dense_3 = Dense(1000, name='dense_3')(dense_3)
-        prediction = Activation('softmax', name='softmax')(dense_3)
-
-        model = Model(input=inputs, output=prediction)
-        if use_pretraining:
-            if pretrained_weights_path:
-                model.load_weights(pretrained_weights_path)
-            else:
-                raise Exception('use_pretraining is true but pretrained_weights_path is not specified!')
-
-        # Removing the final dense_3 layer and adding the layers with correct classification size
-        model.layers.pop()
-        model.layers.pop()
-
-        last = model.layers[-1].output
-        last = Dense(NUM_CLASSES, name='dense_3')(last)
-        prediction = Activation('softmax', name='softmax')(last)
-
-        model = Model(model.input, prediction)
-
-        print(get_time_string() + 'Compiling the model..')
-
-        if loss == 'l1':
-            model.compile(optimizer=optimizer, loss=self.get_l1_loss)
-        else:
-            model.compile(optimizer=optimizer, loss=loss)
-
+        # Start Fine-tuning
         print(get_time_string() + 'Fitting the model..')
-        model.fit(x=processed_train_images, y=train_labels, batch_size=batch_size, epochs=num_epochs,
-                  verbose=1, validation_data=(processed_valid_images, valid_labels))
+        model.fit(processed_train_images, train_labels,
+                  batch_size=batch_size,
+                  nb_epoch=num_epochs,
+                  shuffle=True,
+                  verbose=1, validation_data=(processed_valid_images, valid_labels),
+                  )
 
         print(get_time_string() + 'Fitting complete. Returning model..')
 
@@ -210,9 +153,9 @@ class YearbookModel:
         processed_train_images = preprocess_image_batch(image_paths=train_images, architecture=VGG16_ARCHITECTURE)
         processed_valid_images = preprocess_image_batch(image_paths=valid_images, architecture=VGG16_ARCHITECTURE)
 
-        model = vgg16_model(img_rows=img_rows, img_cols=img_cols, channel=channels, num_classes=NUM_CLASSES,
+        model = vgg16_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=NUM_CLASSES,
                             use_pretraining=use_pretraining, pretrained_weights_path=pretrained_weights_path,
-                            optimizer=optimizer, loss=loss)
+                            optimizer=optimizer, loss=loss, fine_tuning_method=fine_tuning_method)
 
         # Start Fine-tuning
         print(get_time_string() + 'Fitting the model..')
@@ -276,8 +219,8 @@ class YearbookModel:
         return model
 
     def getDenseNet169(self, train_images, train_labels, valid_images, valid_labels, model_save_path, use_pretraining,
-                 pretrained_weights_path, train_dir,
-                 val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss):
+                       pretrained_weights_path, train_dir,
+                       val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss):
         """
 
         :param load_saved_model: boolean (whether to just load the model from weights path)
@@ -307,7 +250,8 @@ class YearbookModel:
         model = densenet169_model(img_rows=img_rows, img_cols=img_cols, channels=channels,
                                   num_classes=NUM_CLASSES, use_pretraining=use_pretraining,
                                   pretrained_weights_path=pretrained_weights_path,
-                                  optimizer=optimizer, loss=loss)
+                                  optimizer=optimizer, loss=loss,
+                                  fine_tuning_method=fine_tuning_method)
 
         # Start Fine-tuning
         print(get_time_string() + 'Fitting the model..')
@@ -325,4 +269,3 @@ class YearbookModel:
             model.save(model_save_path)
 
         return model
-
