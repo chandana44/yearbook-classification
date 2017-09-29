@@ -111,8 +111,8 @@ class YearbookModel:
         channels = 3
 
         # Preprocessing images
-        processed_train_images = preprocess_image_batch(image_paths=train_images, architecture=VGG16_ARCHITECTURE)
-        processed_valid_images = preprocess_image_batch(image_paths=valid_images, architecture=VGG16_ARCHITECTURE)
+        processed_train_images = preprocess_image_batch(image_paths=train_images, architecture=ALEXNET_ARCHITECTURE)
+        processed_valid_images = preprocess_image_batch(image_paths=valid_images, architecture=ALEXNET_ARCHITECTURE)
 
         model = alexnet_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=NUM_CLASSES,
                               use_pretraining=use_pretraining, pretrained_weights_path=pretrained_weights_path,
@@ -258,8 +258,8 @@ class YearbookModel:
         channels = 3
 
         # Preprocessing images
-        processed_train_images = preprocess_image_batch(image_paths=train_images, architecture=VGG16_ARCHITECTURE)
-        processed_valid_images = preprocess_image_batch(image_paths=valid_images, architecture=VGG16_ARCHITECTURE)
+        processed_train_images = preprocess_image_batch(image_paths=train_images, architecture=DENSENET169_ARCHITECTURE)
+        processed_valid_images = preprocess_image_batch(image_paths=valid_images, architecture=DENSENET169_ARCHITECTURE)
 
         model = densenet169_model(img_rows=img_rows, img_cols=img_cols, channels=channels,
                                   num_classes=NUM_CLASSES, use_pretraining=use_pretraining,
