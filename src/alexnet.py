@@ -83,5 +83,6 @@ def alexnet_model(img_rows, img_cols, channels=1, num_classes=None, use_pretrain
 
     print(get_time_string() + 'Compiling the model..')
     model.compile(optimizer=optimizer, loss=loss)
+    print model.summary()
 
     return model
