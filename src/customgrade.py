@@ -7,6 +7,7 @@ os.environ['THEANO_FLAGS'] = "device=cuda0"
 from argparse import ArgumentParser
 from model import *
 from run import *
+from util import *
 
 SRC_PATH = path.dirname(path.abspath(__file__))
 DATA_PATH = path.join(SRC_PATH, '..', 'data')
@@ -32,8 +33,8 @@ pretrained_weights_path_map = {ALEXNET_ARCHITECTURE: ALEXNET_PRETRAINED_WEIGHT_P
 
 
 # Evaluate L1 distance on valid data for yearbook dataset
-def evaluateYearbookFromModel(model, architecture):
-    val_list = util.listYearbook(False, True)
+def evaluateYearbookFromModel(model, architecture, sample=False):
+    val_list = util.listYearbook(False, True, sample)
 
     total_count = len(val_list)
     l1_dist = 0.0
@@ -50,8 +51,8 @@ def evaluateYearbookFromModel(model, architecture):
 
 
 # Predict label for test data on yearbook dataset
-def predictTestYearbookFromModel(model, architecture):
-    test_list = util.testListYearbook()
+def predictTestYearbookFromModel(model, architecture, sample=False):
+    test_list = util.testListYearbook(sample=sample)
 
     total_count = len(test_list)
     print(get_time_string() + "Total test data: ", total_count)
@@ -110,6 +111,10 @@ if __name__ == "__main__":
                         help="optimizer to use: sgd|adagrad",
                         required=False, default='sgd')
 
+    parser.add_argument("--sample", dest="sample",
+                        help="sample: whether to use sample dataset",
+                        required=False, default=0, type=int)
+
     args = parser.parse_args()
     print('Args provided: ' + str(args))
 
@@ -134,11 +139,12 @@ if __name__ == "__main__":
                                        train_dir=None, val_dir=None, fine_tuning_method=args.fine_tuning_method,
                                        batch_size=args.batch_size, num_epochs=args.num_epochs,
                                        optimizer=args.optimizer, loss=args.loss,
-                                       initial_epoch=args.initial_epoch)
+                                       initial_epoch=args.initial_epoch,
+                                       sample=args.sample)
         if args.type == 'valid':
-            evaluateYearbookFromModel(trained_model, args.model_architecture)
+            evaluateYearbookFromModel(trained_model, args.model_architecture, args.sample)
         elif args.type == 'test':
-            predictTestYearbookFromModel(trained_model, args.model_architecture)
+            predictTestYearbookFromModel(trained_model, args.model_architecture, args.sample)
         else:
             print(get_time_string() + "Unknown type '%s'", args.type)
     else:

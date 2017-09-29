@@ -14,6 +14,7 @@ DATA_PATH = path.join(SRC_PATH, '..', 'data')
 
 YEARBOOK_PATH = path.join(DATA_PATH, "yearbook")
 YEARBOOK_TXT_PREFIX = path.join(YEARBOOK_PATH, "yearbook")
+YEARBOOK_TXT_SAMPLE_PREFIX = path.join(YEARBOOK_PATH, "yearbook_sample")
 
 YEARBOOK_TRAIN_PATH = path.join(YEARBOOK_PATH, 'train')
 YEARBOOK_VALID_PATH = path.join(YEARBOOK_PATH, 'valid')
@@ -84,10 +85,14 @@ def label(filename):
 # List all the yearbook files:
 #   train=True, valid=False will only list training files (for training)
 #   train=False, valid=True will only list validation files (for testing)
-def listYearbook(train=True, valid=True):
+def listYearbook(train=True, valid=True, sample=False):
     r = []
-    if train: r += [n.strip().split('\t') for n in open(YEARBOOK_TXT_PREFIX + '_train.txt', 'r')]
-    if valid: r += [n.strip().split('\t') for n in open(YEARBOOK_TXT_PREFIX + '_valid.txt', 'r')]
+    prefix = YEARBOOK_TXT_PREFIX
+    if sample:
+        prefix = YEARBOOK_TXT_SAMPLE_PREFIX
+
+    if train: r += [n.strip().split('\t') for n in open(prefix + '_train.txt', 'r')]
+    if valid: r += [n.strip().split('\t') for n in open(prefix + '_valid.txt', 'r')]
     return r
 
 
@@ -99,9 +104,13 @@ def listStreetView(train=True, valid=True):
     return r
 
 
-def testListYearbook():
+def testListYearbook(sample=False):
     r = []
-    r += [n.strip().split('\t') for n in open(YEARBOOK_TXT_PREFIX + '_test.txt', 'r')]
+    prefix = YEARBOOK_TXT_PREFIX
+    if sample:
+        prefix = YEARBOOK_TXT_SAMPLE_PREFIX
+
+    r += [n.strip().split('\t') for n in open(prefix + '_test.txt', 'r')]
     return r
 
 
