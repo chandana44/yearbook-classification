@@ -76,7 +76,12 @@ class YearbookModel:
         train_images, train_labels = get_data_and_labels(train_data, YEARBOOK_TRAIN_PATH)
         valid_images, valid_labels = get_data_and_labels(valid_data, YEARBOOK_VALID_PATH)
 
-        return self.get_model_function[model_architecture](train_images, train_labels, valid_images, valid_labels,
+        # Preprocessing images
+        print 'Preprocessing images...'
+        processed_train_images = preprocess_image_batch(image_paths=train_images, architecture=model_architecture)
+        processed_valid_images = preprocess_image_batch(image_paths=valid_images, architecture=model_architecture)
+
+        return self.get_model_function[model_architecture](processed_train_images, train_labels, processed_valid_images, valid_labels,
                                                            model_save_path,
                                                            use_pretraining,
                                                            pretrained_weights_path,
@@ -85,7 +90,7 @@ class YearbookModel:
                                                            batch_size, num_epochs,
                                                            optimizer, loss)
 
-    def getAlexNet(self, train_images, train_labels, valid_images, valid_labels, model_save_path,
+    def getAlexNet(self, processed_train_images, train_labels, processed_valid_images, valid_labels, model_save_path,
                    use_pretraining, pretrained_weights_path, train_dir, val_dir, fine_tuning_method,
                    batch_size, num_epochs, optimizer, loss):
         """
@@ -110,10 +115,6 @@ class YearbookModel:
         img_rows, img_cols = 224, 224  # Resolution of inputs
         channels = 3
 
-        # Preprocessing images
-        processed_train_images = preprocess_image_batch(image_paths=train_images, architecture=ALEXNET_ARCHITECTURE)
-        processed_valid_images = preprocess_image_batch(image_paths=valid_images, architecture=ALEXNET_ARCHITECTURE)
-
         model = alexnet_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=NUM_CLASSES,
                               use_pretraining=use_pretraining, pretrained_weights_path=pretrained_weights_path,
                               optimizer=optimizer, loss=loss, fine_tuning_method=fine_tuning_method)
@@ -136,7 +137,7 @@ class YearbookModel:
 
         return model
 
-    def getVGG16(self, train_images, train_labels, valid_images, valid_labels, model_save_path, use_pretraining,
+    def getVGG16(self, processed_train_images, train_labels, processed_valid_images, valid_labels, model_save_path, use_pretraining,
                  pretrained_weights_path, train_dir,
                  val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss):
         """
@@ -161,10 +162,6 @@ class YearbookModel:
         img_rows, img_cols = 224, 224  # Resolution of inputs
         channels = 3
 
-        # Preprocessing images
-        processed_train_images = preprocess_image_batch(image_paths=train_images, architecture=VGG16_ARCHITECTURE)
-        processed_valid_images = preprocess_image_batch(image_paths=valid_images, architecture=VGG16_ARCHITECTURE)
-
         model = vgg16_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=NUM_CLASSES,
                             use_pretraining=use_pretraining, pretrained_weights_path=pretrained_weights_path,
                             optimizer=optimizer, loss=loss, fine_tuning_method=fine_tuning_method)
@@ -187,7 +184,7 @@ class YearbookModel:
 
         return model
 
-    def getResNet152(self, train_images, train_labels, valid_images, valid_labels, model_save_path, use_pretraining,
+    def getResNet152(self, processed_train_images, train_labels, processed_valid_images, valid_labels, model_save_path, use_pretraining,
                      pretrained_weights_path, train_dir,
                      val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss):
         """
@@ -206,10 +203,6 @@ class YearbookModel:
 
         img_rows, img_cols = 224, 224  # Resolution of inputs
         channels = 3
-
-        # Preprocessing images
-        processed_train_images = preprocess_image_batch(image_paths=train_images, architecture=RESNET152_ARCHITECTURE)
-        processed_valid_images = preprocess_image_batch(image_paths=valid_images, architecture=RESNET152_ARCHITECTURE)
 
         model = resnet152_model(img_rows, img_cols, channels, NUM_CLASSES, use_pretraining, pretrained_weights_path,
                                 optimizer, loss)
@@ -232,7 +225,7 @@ class YearbookModel:
 
         return model
 
-    def getDenseNet169(self, train_images, train_labels, valid_images, valid_labels, model_save_path, use_pretraining,
+    def getDenseNet169(self, processed_train_images, train_labels, processed_valid_images, valid_labels, model_save_path, use_pretraining,
                        pretrained_weights_path, train_dir,
                        val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss):
         """
@@ -256,10 +249,6 @@ class YearbookModel:
 
         img_rows, img_cols = 224, 224  # Resolution of inputs
         channels = 3
-
-        # Preprocessing images
-        processed_train_images = preprocess_image_batch(image_paths=train_images, architecture=DENSENET169_ARCHITECTURE)
-        processed_valid_images = preprocess_image_batch(image_paths=valid_images, architecture=DENSENET169_ARCHITECTURE)
 
         model = densenet169_model(img_rows=img_rows, img_cols=img_cols, channels=channels,
                                   num_classes=NUM_CLASSES, use_pretraining=use_pretraining,
