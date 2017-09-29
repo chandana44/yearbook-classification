@@ -30,7 +30,7 @@ class YearbookModel:
     def getModel(self, model_architecture='alexnet', load_saved_model=False, model_save_path=None,
                  use_pretraining=False,
                  pretrained_weights_path=None, train_dir=None, val_dir=None, fine_tuning_method=END_TO_END_FINE_TUNING,
-                 batch_size=128, num_epochs=10, optimizer='sgd', loss='mse', initial_epoch=0):
+                 batch_size=128, num_epochs=10, optimizer='sgd', loss='mse', initial_epoch=0, sample=False):
 
         """
 
@@ -55,8 +55,8 @@ class YearbookModel:
             raise Exception('Invalid architecture name!')
 
         # get train and validation data
-        train_data = listYearbook(True, False)
-        valid_data = listYearbook(False, True)
+        train_data = listYearbook(True, False, sample)
+        valid_data = listYearbook(False, True, sample)
 
         train_images, train_labels = get_data_and_labels(train_data, YEARBOOK_TRAIN_PATH)
         valid_images, valid_labels = get_data_and_labels(valid_data, YEARBOOK_VALID_PATH)
