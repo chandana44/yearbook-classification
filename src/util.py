@@ -288,3 +288,27 @@ def calculate_mean_of_images(image_paths, img_size=None):
 # valid_images, valid_labels = get_data_and_labels(valid_data, YEARBOOK_VALID_PATH)
 #
 # print_mean_of_images(image_paths=train_images, img_size=(256, 256))
+
+
+def chunks(l, m, n):
+    """Yield successive n-sized chunks from l and m."""
+    for i in range(0, len(l), n):
+        yield l[i:i + n], m[i: i + n]
+
+
+# Evaluate L1 distance on valid data for yearbook dataset
+def evaluateYearbookFromModel(model, architecture, sample=False):
+    val_list = listYearbook(False, True, sample)
+
+    total_count = len(val_list)
+    l1_dist = 0.0
+    print(get_time_string() + "Total validation data: ", total_count)
+    for ground_truth_entry in val_list:
+        full_file_path = path.join(YEARBOOK_VALID_PATH, ground_truth_entry[0])
+        pred_year = np.argmax(model.predict(preprocess_image_batch([full_file_path], architecture))) + 1900
+        truth_year = int(ground_truth_entry[1])
+        l1_dist += abs(pred_year - truth_year)
+
+    l1_dist /= total_count
+    print(get_time_string() + "L1 distance for validation set: ", l1_dist)
+    return l1_dist

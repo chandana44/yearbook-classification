@@ -32,24 +32,6 @@ pretrained_weights_path_map = {ALEXNET_ARCHITECTURE: ALEXNET_PRETRAINED_WEIGHT_P
                                DENSENET169_ARCHITECTURE: DENSENET169_PRETRAINED_WEIGHT_PATH}
 
 
-# Evaluate L1 distance on valid data for yearbook dataset
-def evaluateYearbookFromModel(model, architecture, sample=False):
-    val_list = util.listYearbook(False, True, sample)
-
-    total_count = len(val_list)
-    l1_dist = 0.0
-    print(get_time_string() + "Total validation data: ", total_count)
-    for ground_truth_entry in val_list:
-        full_file_path = path.join(YEARBOOK_VALID_PATH, ground_truth_entry[0])
-        pred_year = np.argmax(model.predict(preprocess_image_batch([full_file_path], architecture))) + 1900
-        truth_year = int(ground_truth_entry[1])
-        l1_dist += abs(pred_year - truth_year)
-
-    l1_dist /= total_count
-    print(get_time_string() + "L1 distance for validation set: ", l1_dist)
-    return l1_dist
-
-
 # Predict label for test data on yearbook dataset
 def predictTestYearbookFromModel(model, architecture, sample=False):
     test_list = util.testListYearbook(sample=sample)
