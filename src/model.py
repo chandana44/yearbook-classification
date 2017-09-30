@@ -216,12 +216,14 @@ class YearbookModel:
                 completed += len(x_chunk)
                 print(get_time_string() + str(completed) + ' of ' + str(len(processed_train_images)) + ' complete. ')
 
-            print(get_time_string() + 'Epoch ' + str(e) + ' complete. Evaluating on validation set..')
-            evaluateYearbookFromModel(model=model, architecture=VGG16_ARCHITECTURE, sample=sample)
+            print(get_time_string() + 'Epoch ' + str(e) + ' complete.')
 
             file_name = self.getCheckpointFileName(base_model_save_path=model_save_path, epoch=e)
             print(get_time_string() + 'Saving model to ' + file_name)
             model.save(file_name)
+
+            print(get_time_string() + 'Evaluating on validation set..')
+            evaluateYearbookFromModel(model=model, architecture=VGG16_ARCHITECTURE, sample=sample)
 
             print_line()
 
