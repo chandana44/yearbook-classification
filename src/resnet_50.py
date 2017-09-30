@@ -1,14 +1,8 @@
-from keras.models import Sequential
 from keras.optimizers import SGD
-from keras.layers import Input, Dense, Convolution2D, MaxPooling2D, AveragePooling2D, ZeroPadding2D, Dropout, Flatten, \
-    merge, Reshape, Activation
+from keras.layers import Input, Dense, Convolution2D, MaxPooling2D, AveragePooling2D, ZeroPadding2D, Flatten, \
+    merge, Activation
 from keras.layers.normalization import BatchNormalization
 from keras.models import Model
-from keras import backend as K
-
-from sklearn.metrics import log_loss
-
-from load_cifar10 import load_cifar10_data
 
 
 def identity_block(input_tensor, kernel_size, filters, stage, block):
