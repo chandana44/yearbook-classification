@@ -134,7 +134,7 @@ class YearbookModel:
         print(get_time_string() + 'Fitting complete. Returning model..')
 
         if model_save_path is not None:
-            print(get_time_string() + 'Saving model weights to ' + model_save_path + '..')
+            print(get_time_string() + 'Saving final model to ' + model_save_path + '..')
             model.save(model_save_path)
 
         return model
@@ -182,9 +182,9 @@ class YearbookModel:
         # Start Fine-tuning
         print(get_time_string() + 'Fitting the model..')
         for e in range(num_epochs):
-            print('-'*40)
-            print('Epoch ', e)
-            print('-' * 40)
+            print_line()
+            print('Epoch ' + str(e))
+            print_line()
 
             for x_chunk, y_chunk in chunks(processed_train_images, train_labels, batch_size):
                 print(get_time_string() + 'Fitting model for chunk of size ' + str(len(x_chunk)) + '...')
@@ -200,7 +200,7 @@ class YearbookModel:
             print(get_time_string() + 'Saving model to ' + file_name)
             model.save(file_name)
 
-            print('-' * 40)
+            print_line()
 
         # model.fit(processed_train_images, train_labels,
         #           batch_size=batch_size,
@@ -214,7 +214,7 @@ class YearbookModel:
         print(get_time_string() + 'Fitting complete. Returning model..')
 
         if model_save_path is not None:
-            print(get_time_string() + 'Saving model weights to ' + model_save_path + '..')
+            print(get_time_string() + 'Saving final model to ' + model_save_path + '..')
             model.save(model_save_path)
 
         return model
@@ -256,7 +256,7 @@ class YearbookModel:
         print(get_time_string() + 'Fitting complete. Returning model..')
 
         if model_save_path is not None:
-            print(get_time_string() + 'Saving model weights to ' + model_save_path + '..')
+            print(get_time_string() + 'Saving final model to ' + model_save_path + '..')
             model.save(model_save_path)
 
         return model
@@ -317,7 +317,7 @@ class YearbookModel:
         print(get_time_string() + 'Fitting complete. Returning model..')
 
         if model_save_path is not None:
-            print(get_time_string() + 'Saving model weights to ' + model_save_path + '..')
+            print(get_time_string() + 'Saving final model to ' + model_save_path + '..')
             model.save(model_save_path)
 
         return model

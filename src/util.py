@@ -277,8 +277,8 @@ def calculate_mean_of_images(image_paths, img_size=None):
         # if count % 100 == 0:
         #   print(str(count) + ' of ' + str(len(image_paths)) + ' complete.')
 
-    print 'images mean: ',
-    print(global_sums / count)
+    # print 'images mean: ',
+    # print(global_sums / count)
     return (global_sums / count)
 
 # train_data = listYearbook(True, False)
@@ -302,7 +302,7 @@ def evaluateYearbookFromModel(model, architecture, sample=False):
 
     total_count = len(val_list)
     l1_dist = 0.0
-    print(get_time_string() + "Total validation data: ", total_count)
+    print(get_time_string() + 'Total validation data: ' + str(total_count))
     for ground_truth_entry in val_list:
         full_file_path = path.join(YEARBOOK_VALID_PATH, ground_truth_entry[0])
         pred_year = np.argmax(model.predict(preprocess_image_batch([full_file_path], architecture))) + 1900
@@ -310,5 +310,9 @@ def evaluateYearbookFromModel(model, architecture, sample=False):
         l1_dist += abs(pred_year - truth_year)
 
     l1_dist /= total_count
-    print(get_time_string() + "L1 distance for validation set: ", l1_dist)
+    print(get_time_string() + 'L1 distance for validation set: ' + str(l1_dist))
     return l1_dist
+
+
+def print_line():
+    print('-'*100)
