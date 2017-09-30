@@ -307,16 +307,42 @@ class YearbookModel:
         if initial_epoch >= num_epochs:
             print(get_time_string() + 'Not fitting the model since initial_epoch is >= num_epochs. Returning model..')
             return model
+
         # Start Fine-tuning
         print(get_time_string() + 'Fitting the model..')
-        model.fit(processed_train_images, train_labels,
-                  batch_size=batch_size,
-                  nb_epoch=num_epochs,
-                  shuffle=True,
-                  verbose=1, validation_data=(processed_valid_images, valid_labels),
-                  callbacks=[self.getCheckpointer(model_save_path)],
-                  initial_epoch=initial_epoch
-                  )
+        for e in range(num_epochs):
+            print_line()
+            print('Starting epoch ' + str(e))
+            print_line()
+            completed = 0
+
+            for x_chunk, y_chunk in chunks(processed_train_images, train_labels, batch_size):
+                print(get_time_string() + 'Fitting model for chunk of size ' + str(len(x_chunk)) + '...')
+                model.fit(x_chunk, y_chunk,
+                          batch_size=batch_size,
+                          nb_epoch=1,
+                          verbose=1
+                          )
+                completed += len(x_chunk)
+                print(get_time_string() + str(completed) + ' of ' + str(len(processed_train_images)) + ' complete. ')
+
+            print(get_time_string() + 'Epoch ' + str(e) + ' complete. Evaluating on validation set..')
+            evaluateYearbookFromModel(model=model, architecture=VGG16_ARCHITECTURE, sample=sample)
+
+            file_name = self.getCheckpointFileName(base_model_save_path=model_save_path, epoch=e)
+            print(get_time_string() + 'Saving model to ' + file_name)
+            model.save(file_name)
+
+            print_line()
+
+        # model.fit(processed_train_images, train_labels,
+        #           batch_size=batch_size,
+        #           nb_epoch=num_epochs,
+        #           shuffle=True,
+        #           verbose=1, validation_data=(processed_valid_images, valid_labels),
+        #           callbacks=[self.getCheckpointer(model_save_path)],
+        #           initial_epoch=initial_epoch
+        #           )
 
         print(get_time_string() + 'Fitting complete. Returning model..')
 
