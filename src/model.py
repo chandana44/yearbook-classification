@@ -183,8 +183,9 @@ class YearbookModel:
         print(get_time_string() + 'Fitting the model..')
         for e in range(num_epochs):
             print_line()
-            print('Epoch ' + str(e))
+            print('Starting epoch ' + str(e))
             print_line()
+            completed = 0
 
             for x_chunk, y_chunk in chunks(processed_train_images, train_labels, batch_size):
                 print(get_time_string() + 'Fitting model for chunk of size ' + str(len(x_chunk)) + '...')
@@ -193,6 +194,9 @@ class YearbookModel:
                           nb_epoch=1,
                           verbose=1
                           )
+                completed += len(x_chunk)
+                print(get_time_string() + str(completed) + ' of ' + str(len(processed_train_images)) + ' complete. ')
+
             print(get_time_string() + 'Epoch ' + str(e) + ' complete. Evaluating on validation set..')
             evaluateYearbookFromModel(model=model, architecture=VGG16_ARCHITECTURE, sample=sample)
 
