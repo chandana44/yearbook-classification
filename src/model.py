@@ -64,18 +64,14 @@ class YearbookModel:
 
         # get train and validation data
         train_data = listYearbook(True, False, sample)
-        valid_data = listYearbook(False, True, sample)
 
         train_images, train_labels = get_data_and_labels(train_data, YEARBOOK_TRAIN_PATH)
-        valid_images, valid_labels = get_data_and_labels(valid_data, YEARBOOK_VALID_PATH)
 
         # Preprocessing images
         print(get_time_string() + 'Preprocessing images...')
         processed_train_images = preprocess_image_batch(image_paths=train_images, architecture=model_architecture)
-        processed_valid_images = preprocess_image_batch(image_paths=valid_images, architecture=model_architecture)
 
-        return self.get_model_function[model_architecture](processed_train_images, train_labels, processed_valid_images,
-                                                           valid_labels,
+        return self.get_model_function[model_architecture](processed_train_images, train_labels,
                                                            load_saved_model,
                                                            model_save_path,
                                                            use_pretraining,
@@ -87,7 +83,7 @@ class YearbookModel:
                                                            initial_epoch,
                                                            sample)
 
-    def getAlexNet(self, processed_train_images, train_labels, processed_valid_images, valid_labels, load_saved_model,
+    def getAlexNet(self, processed_train_images, train_labels, load_saved_model,
                    model_save_path, use_pretraining, pretrained_weights_path, train_dir, val_dir,
                    fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample):
         """
@@ -123,15 +119,36 @@ class YearbookModel:
                                   use_pretraining=use_pretraining, pretrained_weights_path=pretrained_weights_path,
                                   optimizer=optimizer, loss=loss, fine_tuning_method=fine_tuning_method)
 
+        if initial_epoch >= num_epochs:
+            print(get_time_string() + 'Not fitting the model since initial_epoch is >= num_epochs. Returning model..')
+            return model
+
         # Start Fine-tuning
         print(get_time_string() + 'Fitting the model..')
-        model.fit(processed_train_images, train_labels,
-                  batch_size=batch_size,
-                  nb_epoch=num_epochs,
-                  shuffle=True,
-                  verbose=1, validation_data=(processed_valid_images, valid_labels),
-                  callbacks=[self.getCheckpointer(model_save_path)]
-                  )
+        for e in range(num_epochs):
+            print_line()
+            print('Starting epoch ' + str(e))
+            print_line()
+            completed = 0
+
+            for x_chunk, y_chunk in chunks(processed_train_images, train_labels, batch_size):
+                print(get_time_string() + 'Fitting model for chunk of size ' + str(len(x_chunk)) + '...')
+                model.fit(x_chunk, y_chunk,
+                          batch_size=batch_size,
+                          nb_epoch=1,
+                          verbose=1
+                          )
+                completed += len(x_chunk)
+                print(get_time_string() + str(completed) + ' of ' + str(len(processed_train_images)) + ' complete. ')
+
+            print(get_time_string() + 'Epoch ' + str(e) + ' complete. Evaluating on validation set..')
+            evaluateYearbookFromModel(model=model, architecture=ALEXNET_ARCHITECTURE, sample=sample)
+
+            file_name = self.getCheckpointFileName(base_model_save_path=model_save_path, epoch=e)
+            print(get_time_string() + 'Saving model to ' + file_name)
+            model.save(file_name)
+
+            print_line()
 
         print(get_time_string() + 'Fitting complete. Returning model..')
 
@@ -141,7 +158,7 @@ class YearbookModel:
 
         return model
 
-    def getVGG16(self, processed_train_images, train_labels, processed_valid_images, valid_labels, load_saved_model,
+    def getVGG16(self, processed_train_images, train_labels, load_saved_model,
                  model_save_path, use_pretraining, pretrained_weights_path, train_dir,
                  val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample):
         """
@@ -225,7 +242,7 @@ class YearbookModel:
 
         return model
 
-    def getResNet152(self, processed_train_images, train_labels, processed_valid_images, valid_labels, load_saved_model,
+    def getResNet152(self, processed_train_images, train_labels, load_saved_model,
                      model_save_path, use_pretraining, pretrained_weights_path, train_dir,
                      val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample):
         """
@@ -246,18 +263,45 @@ class YearbookModel:
         img_rows, img_cols = 224, 224  # Resolution of inputs
         channels = 3
 
-        model = resnet152_model(img_rows, img_cols, channels, NUM_CLASSES, use_pretraining, pretrained_weights_path,
-                                optimizer, loss)
+        if load_saved_model:
+            if model_save_path is None:
+                raise Exception('Unable to load trained model as model_save_path is None!')
+            print(get_time_string() + 'Loading saved model from ' + model_save_path + '..')
+            model = load_model(model_save_path)
+        else:
+            model = resnet152_model(img_rows, img_cols, channels, NUM_CLASSES, use_pretraining, pretrained_weights_path,
+                                    fine_tuning_method, optimizer, loss)
+
+        if initial_epoch >= num_epochs:
+            print(get_time_string() + 'Not fitting the model since initial_epoch is >= num_epochs. Returning model..')
+            return model
 
         # Start Fine-tuning
         print(get_time_string() + 'Fitting the model..')
-        model.fit(processed_train_images, train_labels,
-                  batch_size=batch_size,
-                  nb_epoch=num_epochs,
-                  shuffle=True,
-                  verbose=1, validation_data=(processed_valid_images, valid_labels),
-                  callbacks=[self.getCheckpointer(model_save_path)]
-                  )
+        for e in range(num_epochs):
+            print_line()
+            print('Starting epoch ' + str(e))
+            print_line()
+            completed = 0
+
+            for x_chunk, y_chunk in chunks(processed_train_images, train_labels, batch_size):
+                print(get_time_string() + 'Fitting model for chunk of size ' + str(len(x_chunk)) + '...')
+                model.fit(x_chunk, y_chunk,
+                          batch_size=batch_size,
+                          nb_epoch=1,
+                          verbose=1
+                          )
+                completed += len(x_chunk)
+                print(get_time_string() + str(completed) + ' of ' + str(len(processed_train_images)) + ' complete. ')
+
+            print(get_time_string() + 'Epoch ' + str(e) + ' complete. Evaluating on validation set..')
+            evaluateYearbookFromModel(model=model, architecture=RESNET152_ARCHITECTURE, sample=sample)
+
+            file_name = self.getCheckpointFileName(base_model_save_path=model_save_path, epoch=e)
+            print(get_time_string() + 'Saving model to ' + file_name)
+            model.save(file_name)
+
+            print_line()
 
         print(get_time_string() + 'Fitting complete. Returning model..')
 
@@ -267,7 +311,7 @@ class YearbookModel:
 
         return model
 
-    def getResNet50(self, processed_train_images, train_labels, processed_valid_images, valid_labels, load_saved_model,
+    def getResNet50(self, processed_train_images, train_labels, load_saved_model,
                     model_save_path, use_pretraining, pretrained_weights_path, train_dir,
                     val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample):
         """
@@ -295,7 +339,7 @@ class YearbookModel:
             model = load_model(model_save_path)
         else:
             model = resnet50_model(img_rows, img_cols, channels, NUM_CLASSES, use_pretraining, pretrained_weights_path,
-                                   optimizer, loss)
+                                   fine_tuning_method, optimizer, loss)
 
         if initial_epoch >= num_epochs:
             print(get_time_string() + 'Not fitting the model since initial_epoch is >= num_epochs. Returning model..')
@@ -336,8 +380,7 @@ class YearbookModel:
 
         return model
 
-    def getDenseNet169(self, processed_train_images, train_labels, processed_valid_images, valid_labels,
-                       load_saved_model,
+    def getDenseNet169(self, processed_train_images, train_labels, load_saved_model,
                        model_save_path, use_pretraining, pretrained_weights_path, train_dir,
                        val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample):
         """
@@ -398,7 +441,7 @@ class YearbookModel:
                 print(get_time_string() + str(completed) + ' of ' + str(len(processed_train_images)) + ' complete. ')
 
             print(get_time_string() + 'Epoch ' + str(e) + ' complete. Evaluating on validation set..')
-            evaluateYearbookFromModel(model=model, architecture=VGG16_ARCHITECTURE, sample=sample)
+            evaluateYearbookFromModel(model=model, architecture=DENSENET169_ARCHITECTURE, sample=sample)
 
             file_name = self.getCheckpointFileName(base_model_save_path=model_save_path, epoch=e)
             print(get_time_string() + 'Saving model to ' + file_name)

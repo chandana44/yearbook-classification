@@ -3,6 +3,7 @@ from keras.layers import Input, Dense, Convolution2D, MaxPooling2D, AveragePooli
     merge, Activation
 from keras.layers.normalization import BatchNormalization
 from keras.models import Model
+from util import *
 
 
 def identity_block(input_tensor, kernel_size, filters, stage, block):
@@ -77,7 +78,7 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, strides=(2, 2))
 
 
 def resnet50_model(img_rows, img_cols, color_type=1, num_classes=None, use_pretraining=False,
-                   pretrained_weights_path=None, optimizer=None, loss=None):
+                   pretrained_weights_path=None, fine_tuning_method=None, optimizer=None, loss=None):
     """
     Resnet 50 Model for Keras
     Model Schema is based on
@@ -146,10 +147,16 @@ def resnet50_model(img_rows, img_cols, color_type=1, num_classes=None, use_pretr
     # Create another model with our customized softmax
     model = Model(img_input, x_newfc)
 
+    if fine_tuning_method == FREEZE_INITIAL_LAYERS:
+        print(get_time_string() + 'Freezing last 6 layers of the network..')
+        for layer in model.layers[:-6]:
+            layer.trainable = False
+
     # Learning rate is changed to 0.001
     sgd = SGD(lr=1e-3, decay=1e-6, momentum=0.9, nesterov=True)
     model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics=['accuracy'])
 
+    print 'number of layers: ', len(model.layers)
     print(model.summary())
 
     return model

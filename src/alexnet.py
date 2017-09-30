@@ -13,8 +13,7 @@ from keras.optimizers import SGD
 
 
 def alexnet_model(img_rows, img_cols, channels=1, num_classes=None, use_pretraining=True,
-                  pretrained_weights_path=None, optimizer=None, loss=None,
-                  fine_tuning_method=END_TO_END_FINE_TUNING):
+                  pretrained_weights_path=None, fine_tuning_method=END_TO_END_FINE_TUNING, optimizer=None, loss=None, ):
     inputs = Input(shape=(channels, img_rows, img_cols))
     conv_1 = Convolution2D(96, 11, 11, subsample=(4, 4), activation='relu',
                            name='conv_1')(inputs)
@@ -65,14 +64,14 @@ def alexnet_model(img_rows, img_cols, channels=1, num_classes=None, use_pretrain
     model.layers.pop()
 
     last = model.layers[-1].output
-    last = Dense(NUM_CLASSES, name='dense_3')(last)
+    last = Dense(num_classes, name='dense_3')(last)
     prediction = Activation('softmax', name='softmax')(last)
 
     model = Model(model.input, prediction)
 
     if fine_tuning_method == FREEZE_INITIAL_LAYERS:
-        print(get_time_string() + 'Freezing initial 5 layers of the network..')
-        for layer in model.layers[:28]:
+        print(get_time_string() + 'Freezing last 6 layers of the network..')
+        for layer in model.layers[:-6]:
             layer.trainable = False
 
     if optimizer == 'sgd':
@@ -83,6 +82,7 @@ def alexnet_model(img_rows, img_cols, channels=1, num_classes=None, use_pretrain
     print(get_time_string() + 'Compiling the model..')
     model.compile(optimizer=optimizer, loss=loss)
 
+    print 'number of layers: ', len(model.layers)
     print(model.summary())
 
     return model
