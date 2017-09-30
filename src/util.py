@@ -309,12 +309,15 @@ def evaluateYearbookFromModel(model, architecture, sample=False):
 
     total_count = len(val_list)
     l1_dist = 0.0
+    count = 1
     print(get_time_string() + 'Total validation data: ' + str(total_count))
     for ground_truth_entry in val_list:
+        print 'validating '+ str(count) + '/' + str(total_count)
         full_file_path = path.join(YEARBOOK_VALID_PATH, ground_truth_entry[0])
         pred_year = np.argmax(model.predict(preprocess_image_batch([full_file_path], architecture))) + 1900
         truth_year = int(ground_truth_entry[1])
         l1_dist += abs(pred_year - truth_year)
+        count += 1
 
     l1_dist /= total_count
     print(get_time_string() + 'L1 distance for validation set: ' + str(l1_dist))
