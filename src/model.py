@@ -69,9 +69,9 @@ class YearbookModel:
 
         # Preprocessing images
         print(get_time_string() + 'Preprocessing images...')
-        processed_train_images = preprocess_image_batch(image_paths=train_images, architecture=model_architecture)
+        # processed_train_images = preprocess_image_batch(image_paths=train_images, architecture=model_architecture)
 
-        return self.get_model_function[model_architecture](processed_train_images, train_labels,
+        return self.get_model_function[model_architecture](train_images, train_labels,
                                                            load_saved_model,
                                                            model_save_path,
                                                            use_pretraining,
@@ -83,7 +83,7 @@ class YearbookModel:
                                                            initial_epoch,
                                                            sample)
 
-    def getAlexNet(self, processed_train_images, train_labels, load_saved_model,
+    def getAlexNet(self, train_images, train_labels, load_saved_model,
                    model_save_path, use_pretraining, pretrained_weights_path, train_dir, val_dir,
                    fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample):
         """
@@ -131,7 +131,7 @@ class YearbookModel:
             print_line()
             completed = 0
 
-            for x_chunk, y_chunk in chunks(processed_train_images, train_labels, batch_size):
+            for x_chunk, y_chunk in chunks(train_images, train_labels, batch_size, ALEXNET_ARCHITECTURE):
                 print(get_time_string() + 'Fitting model for chunk of size ' + str(len(x_chunk)) + '...')
                 model.fit(x_chunk, y_chunk,
                           batch_size=batch_size,
@@ -139,7 +139,7 @@ class YearbookModel:
                           verbose=1
                           )
                 completed += len(x_chunk)
-                print(get_time_string() + str(completed) + ' of ' + str(len(processed_train_images)) + ' complete. ')
+                print(get_time_string() + str(completed) + ' of ' + str(len(train_images)) + ' complete. ')
 
             file_name = self.getCheckpointFileName(base_model_save_path=model_save_path, epoch=e)
             print(get_time_string() + 'Saving model to ' + file_name)
@@ -158,7 +158,7 @@ class YearbookModel:
 
         return model
 
-    def getVGG16(self, processed_train_images, train_labels, load_saved_model,
+    def getVGG16(self, train_images, train_labels, load_saved_model,
                  model_save_path, use_pretraining, pretrained_weights_path, train_dir,
                  val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample):
         """
@@ -206,7 +206,7 @@ class YearbookModel:
             print_line()
             completed = 0
 
-            for x_chunk, y_chunk in chunks(processed_train_images, train_labels, batch_size):
+            for x_chunk, y_chunk in chunks(train_images, train_labels, batch_size, VGG16_ARCHITECTURE):
                 print(get_time_string() + 'Fitting model for chunk of size ' + str(len(x_chunk)) + '...')
                 model.fit(x_chunk, y_chunk,
                           batch_size=batch_size,
@@ -214,7 +214,7 @@ class YearbookModel:
                           verbose=1
                           )
                 completed += len(x_chunk)
-                print(get_time_string() + str(completed) + ' of ' + str(len(processed_train_images)) + ' complete. ')
+                print(get_time_string() + str(completed) + ' of ' + str(len(train_images)) + ' complete. ')
 
             print(get_time_string() + 'Epoch ' + str(e) + ' complete.')
 
@@ -244,7 +244,7 @@ class YearbookModel:
 
         return model
 
-    def getResNet152(self, processed_train_images, train_labels, load_saved_model,
+    def getResNet152(self, train_images, train_labels, load_saved_model,
                      model_save_path, use_pretraining, pretrained_weights_path, train_dir,
                      val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample):
         """
@@ -286,7 +286,7 @@ class YearbookModel:
             print_line()
             completed = 0
 
-            for x_chunk, y_chunk in chunks(processed_train_images, train_labels, batch_size):
+            for x_chunk, y_chunk in chunks(train_images, train_labels, batch_size, RESNET152_ARCHITECTURE):
                 print(get_time_string() + 'Fitting model for chunk of size ' + str(len(x_chunk)) + '...')
                 model.fit(x_chunk, y_chunk,
                           batch_size=batch_size,
@@ -294,7 +294,7 @@ class YearbookModel:
                           verbose=1
                           )
                 completed += len(x_chunk)
-                print(get_time_string() + str(completed) + ' of ' + str(len(processed_train_images)) + ' complete. ')
+                print(get_time_string() + str(completed) + ' of ' + str(len(train_images)) + ' complete. ')
 
             file_name = self.getCheckpointFileName(base_model_save_path=model_save_path, epoch=e)
             print(get_time_string() + 'Saving model to ' + file_name)
@@ -313,7 +313,7 @@ class YearbookModel:
 
         return model
 
-    def getResNet50(self, processed_train_images, train_labels, load_saved_model,
+    def getResNet50(self, train_images, train_labels, load_saved_model,
                     model_save_path, use_pretraining, pretrained_weights_path, train_dir,
                     val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample):
         """
@@ -355,7 +355,7 @@ class YearbookModel:
             print_line()
             completed = 0
 
-            for x_chunk, y_chunk in chunks(processed_train_images, train_labels, batch_size):
+            for x_chunk, y_chunk in chunks(train_images, train_labels, batch_size, RESNET50_ARCHITECTURE):
                 print(get_time_string() + 'Fitting model for chunk of size ' + str(len(x_chunk)) + '...')
                 model.fit(x_chunk, y_chunk,
                           batch_size=batch_size,
@@ -363,7 +363,7 @@ class YearbookModel:
                           verbose=1
                           )
                 completed += len(x_chunk)
-                print(get_time_string() + str(completed) + ' of ' + str(len(processed_train_images)) + ' complete. ')
+                print(get_time_string() + str(completed) + ' of ' + str(len(train_images)) + ' complete. ')
 
             file_name = self.getCheckpointFileName(base_model_save_path=model_save_path, epoch=e)
             print(get_time_string() + 'Saving model to ' + file_name)
@@ -382,7 +382,7 @@ class YearbookModel:
 
         return model
 
-    def getDenseNet169(self, processed_train_images, train_labels, load_saved_model,
+    def getDenseNet169(self, train_images, train_labels, load_saved_model,
                        model_save_path, use_pretraining, pretrained_weights_path, train_dir,
                        val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample):
         """
@@ -432,7 +432,7 @@ class YearbookModel:
             print_line()
             completed = 0
 
-            for x_chunk, y_chunk in chunks(processed_train_images, train_labels, batch_size):
+            for x_chunk, y_chunk in chunks(train_images, train_labels, batch_size, DENSENET169_ARCHITECTURE):
                 print(get_time_string() + 'Fitting model for chunk of size ' + str(len(x_chunk)) + '...')
                 model.fit(x_chunk, y_chunk,
                           batch_size=batch_size,
@@ -440,7 +440,7 @@ class YearbookModel:
                           verbose=1
                           )
                 completed += len(x_chunk)
-                print(get_time_string() + str(completed) + ' of ' + str(len(processed_train_images)) + ' complete. ')
+                print(get_time_string() + str(completed) + ' of ' + str(len(train_images)) + ' complete. ')
 
             file_name = self.getCheckpointFileName(base_model_save_path=model_save_path, epoch=e)
             print(get_time_string() + 'Saving model to ' + file_name)
