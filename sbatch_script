@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH -J yearbook10_densenet_5_epochs_32_cc           # job namu
-#SBATCH -o yearbook10_densenet_5_epochs_32_cc.o%j       # output and error file name (%j expands to jobID)
+#SBATCH -J logs/yearbook10_densenet_5_epochs_32_cc           # job namu
+#SBATCH -o logs/yearbook10_densenet_5_epochs_32_cc.o%j       # output and error file name (%j expands to jobID)
 #SBATCH -n 1 -N 1               # total number of mpi tasks requested
 #SBATCH -p gpu     # queue (partition) -- normal, development, etc.
 #SBATCH -t 12:00:00        # run time (hh:mm:ss) - 1.5 hours
