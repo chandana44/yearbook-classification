@@ -24,11 +24,13 @@ CHECKPOINT_BASE_DIR = '../checkpoint/'
 ALEXNET_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/alexnet_weights.h5'
 VGG16_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/vgg16_weights_th_dim_ordering_th_kernels.h5'
 RESNET152_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/resnet152_weights.h5'
+RESNET50_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/resnet50_weights.h5'
 DENSENET169_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/densenet169_weights_th.h5'
 
 pretrained_weights_path_map = {ALEXNET_ARCHITECTURE: ALEXNET_PRETRAINED_WEIGHT_PATH,
                                VGG16_ARCHITECTURE: VGG16_PRETRAINED_WEIGHT_PATH,
                                RESNET152_ARCHITECTURE: RESNET152_PRETRAINED_WEIGHT_PATH,
+                               RESNET50_ARCHITECTURE: RESNET50_PRETRAINED_WEIGHT_PATH,
                                DENSENET169_ARCHITECTURE: DENSENET169_PRETRAINED_WEIGHT_PATH}
 
 
@@ -63,7 +65,7 @@ if __name__ == "__main__":
                         help="Dataset: valid/test", required=True)
 
     parser.add_argument("--model_architecture", dest="model_architecture",
-                        help="Model architecture: alexnet/vgg16/resnet152", required=True)
+                        help="Model architecture: alexnet/vgg16/vgg19/resnet152/resnet50/densenet169", required=True)
     parser.add_argument("--load_saved_model", dest="load_saved_model",
                         help="load_saved_model: Whether to use saved model",
                         required=False, default=0, type=int)

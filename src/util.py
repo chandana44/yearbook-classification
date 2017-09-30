@@ -32,28 +32,33 @@ ALEXNET_ARCHITECTURE = 'alexnet'
 VGG16_ARCHITECTURE = 'vgg16'
 VGG19_ARCHITECTURE = 'vgg19'
 RESNET152_ARCHITECTURE = 'resnet152'
+RESNET50_ARCHITECTURE = 'resnet50'
 DENSENET169_ARCHITECTURE = 'densenet169'
 
 ARCHITECTURES = [ALEXNET_ARCHITECTURE,
                  VGG16_ARCHITECTURE,
                  VGG19_ARCHITECTURE,
                  RESNET152_ARCHITECTURE,
+                 RESNET50_ARCHITECTURE,
                  DENSENET169_ARCHITECTURE]
 
 # dictionary for arcitectures-image sizes
 image_sizes = {ALEXNET_ARCHITECTURE: (256, 256),
                VGG16_ARCHITECTURE: (224, 224),
                RESNET152_ARCHITECTURE: (256, 256),
+               RESNET50_ARCHITECTURE: (256, 256),
                DENSENET169_ARCHITECTURE: (224, 224)}
 
 crop_sizes = {ALEXNET_ARCHITECTURE: (227, 227),
               VGG16_ARCHITECTURE: None,
               RESNET152_ARCHITECTURE: (224, 224),
+              RESNET50_ARCHITECTURE: (224, 224),
               DENSENET169_ARCHITECTURE: None}
 
 color_modes = {ALEXNET_ARCHITECTURE: "rgb",
                VGG16_ARCHITECTURE: "rgb",
                RESNET152_ARCHITECTURE: "rgb",
+               RESNET50_ARCHITECTURE: "rgb",
                DENSENET169_ARCHITECTURE: "rgb"}
 
 END_TO_END_FINE_TUNING = 'end-to-end'
@@ -282,6 +287,7 @@ def calculate_mean_of_images(image_paths, img_size=None):
     # print(global_sums / count)
     return (global_sums / count)
 
+
 # train_data = listYearbook(True, False)
 # valid_data = listYearbook(False, True)
 #
@@ -316,4 +322,4 @@ def evaluateYearbookFromModel(model, architecture, sample=False):
 
 
 def print_line():
-    print('-'*100)
+    print('-' * 100)

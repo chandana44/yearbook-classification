@@ -4,6 +4,7 @@ from keras.models import load_model
 from alexnet import alexnet_model
 from densenet169 import densenet169_model
 from resnet_152 import resnet152_model
+from resnet_50 import resnet50_model
 from util import *
 from vgg16 import vgg16_model
 
@@ -15,6 +16,7 @@ class YearbookModel:
         self.get_model_function[ALEXNET_ARCHITECTURE] = self.getAlexNet
         self.get_model_function[VGG16_ARCHITECTURE] = self.getVGG16
         self.get_model_function[RESNET152_ARCHITECTURE] = self.getResNet152
+        self.get_model_function[RESNET50_ARCHITECTURE] = self.getResNet50
         self.get_model_function[DENSENET169_ARCHITECTURE] = self.getDenseNet169
 
     def getCheckpointer(self, model_save_path):
@@ -256,6 +258,75 @@ class YearbookModel:
                   verbose=1, validation_data=(processed_valid_images, valid_labels),
                   callbacks=[self.getCheckpointer(model_save_path)]
                   )
+
+        print(get_time_string() + 'Fitting complete. Returning model..')
+
+        if model_save_path is not None:
+            print(get_time_string() + 'Saving final model to ' + model_save_path + '..')
+            model.save(model_save_path)
+
+        return model
+
+    def getResNet50(self, processed_train_images, train_labels, processed_valid_images, valid_labels, load_saved_model,
+                    model_save_path, use_pretraining, pretrained_weights_path, train_dir,
+                    val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample):
+        """
+
+        :param load_saved_model: boolean (whether to just load the model from weights path)
+        :param model_save_path: (final model weights path, if load_pretrained is true)
+        :param pretrained_weights_path: if load_trained is false and if use_pretraining is true, the path of weights to load for pre-training
+        :param train_dir: training data directory
+        :param val_dir: validation data directory
+        :param use_pretraining: boolean, whether to use pre-training or train from scratch
+        :param fine_tuning_method: whether to use end-to-end pre-training or phase-by-phase pre-training
+        :param initial_epoch: starting epoch to start training
+        :return: Returns the AlexNet model according to the parameters provided
+
+        """
+        print(get_time_string() + 'Creating ResNet50 model..')
+
+        img_rows, img_cols = 224, 224  # Resolution of inputs
+        channels = 3
+
+        if load_saved_model:
+            if model_save_path is None:
+                raise Exception('Unable to load trained model as model_save_path is None!')
+            print(get_time_string() + 'Loading saved model from ' + model_save_path + '..')
+            model = load_model(model_save_path)
+        else:
+            model = resnet50_model(img_rows, img_cols, channels, NUM_CLASSES, use_pretraining, pretrained_weights_path,
+                                   optimizer, loss)
+
+        if initial_epoch >= num_epochs:
+            print(get_time_string() + 'Not fitting the model since initial_epoch is >= num_epochs. Returning model..')
+            return model
+
+        # Start Fine-tuning
+        print(get_time_string() + 'Fitting the model..')
+        for e in range(num_epochs):
+            print_line()
+            print('Starting epoch ' + str(e))
+            print_line()
+            completed = 0
+
+            for x_chunk, y_chunk in chunks(processed_train_images, train_labels, batch_size):
+                print(get_time_string() + 'Fitting model for chunk of size ' + str(len(x_chunk)) + '...')
+                model.fit(x_chunk, y_chunk,
+                          batch_size=batch_size,
+                          nb_epoch=1,
+                          verbose=1
+                          )
+                completed += len(x_chunk)
+                print(get_time_string() + str(completed) + ' of ' + str(len(processed_train_images)) + ' complete. ')
+
+            print(get_time_string() + 'Epoch ' + str(e) + ' complete. Evaluating on validation set..')
+            evaluateYearbookFromModel(model=model, architecture=RESNET50_ARCHITECTURE, sample=sample)
+
+            file_name = self.getCheckpointFileName(base_model_save_path=model_save_path, epoch=e)
+            print(get_time_string() + 'Saving model to ' + file_name)
+            model.save(file_name)
+
+            print_line()
 
         print(get_time_string() + 'Fitting complete. Returning model..')
 
