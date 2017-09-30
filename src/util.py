@@ -191,7 +191,8 @@ def preprocess_image_batch(image_paths, architecture, out=None):
 
     """
     img_list = []
-    rgb_mean = calculate_mean_of_images(image_paths, image_sizes[architecture])
+    # rgb_mean = calculate_mean_of_images(image_paths, image_sizes[architecture])
+    rgb_mean = [123.68, 116.779, 103.939]
     for im_path in image_paths:
         img = imread(im_path, mode='RGB')
         img_size = image_sizes[architecture]
