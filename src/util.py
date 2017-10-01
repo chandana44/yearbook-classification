@@ -319,7 +319,7 @@ def evaluateYearbookFromModel(model, architecture, sample=False):
         print get_time_string() + 'validating ' + str(count+1) + ' - ' + str(count + batch_size)
         predictions = model.predict(x_chunk)
         years = np.array([np.argmax(p) + 1900 for p in predictions])
-        l1_dist += np.sum(years - y_chunk)
+        l1_dist += np.sum(abs(years - y_chunk))
         count += batch_size
 
     l1_dist /= total_count
