@@ -73,7 +73,7 @@ def get_time_string():
     return time.strftime('%c') + ' '
 
 
-def get_l1_loss(self, x, y):
+def get_l1_loss(x, y):
     return abs(K.argmax(x) - K.argmax(y))
 
 
