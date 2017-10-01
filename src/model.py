@@ -7,6 +7,7 @@ from resnet_152 import resnet152_model
 from resnet_50 import resnet50_model
 from util import *
 from vgg16 import vgg16_model
+import customlayers
 
 
 class YearbookModel:
@@ -412,7 +413,7 @@ class YearbookModel:
             if model_save_path is None:
                 raise Exception('Unable to load trained model as model_save_path is None!')
             print(get_time_string() + 'Loading saved model from ' + model_save_path + '..')
-            model = load_model(model_save_path)
+            model = load_model(model_save_path, custom_objects={'Scale': customlayers.Scale})
         else:
             model = densenet169_model(img_rows=img_rows, img_cols=img_cols, channels=channels,
                                       num_classes=NUM_CLASSES, use_pretraining=use_pretraining,
