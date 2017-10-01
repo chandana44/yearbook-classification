@@ -70,7 +70,7 @@ def alexnet_model(img_rows, img_cols, channels=1, num_classes=None, use_pretrain
     model = Model(model.input, prediction)
 
     if fine_tuning_method == FREEZE_INITIAL_LAYERS:
-        print(get_time_string() + 'Freezing last 6 layers of the network..')
+        print(get_time_string() + 'Freezing except last 6 layers of the network..')
         for layer in model.layers[:-6]:
             layer.trainable = False
 
