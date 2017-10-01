@@ -125,7 +125,7 @@ class YearbookModel:
 
         # Start Fine-tuning
         print(get_time_string() + 'Fitting the model..')
-        for e in range(num_epochs):
+        for e in range(initial_epoch, num_epochs):
             print_line()
             print('Starting epoch ' + str(e))
             print_line()
@@ -200,7 +200,7 @@ class YearbookModel:
 
         # Start Fine-tuning
         print(get_time_string() + 'Fitting the model..')
-        for e in range(num_epochs):
+        for e in range(initial_epoch, num_epochs):
             print_line()
             print('Starting epoch ' + str(e))
             print_line()
@@ -280,7 +280,7 @@ class YearbookModel:
 
         # Start Fine-tuning
         print(get_time_string() + 'Fitting the model..')
-        for e in range(num_epochs):
+        for e in range(initial_epoch, num_epochs):
             print_line()
             print('Starting epoch ' + str(e))
             print_line()
@@ -349,7 +349,7 @@ class YearbookModel:
 
         # Start Fine-tuning
         print(get_time_string() + 'Fitting the model..')
-        for e in range(num_epochs):
+        for e in range(initial_epoch, num_epochs):
             print_line()
             print('Starting epoch ' + str(e))
             print_line()
@@ -426,7 +426,7 @@ class YearbookModel:
 
         # Start Fine-tuning
         print(get_time_string() + 'Fitting the model..')
-        for e in range(num_epochs):
+        for e in range(initial_epoch, num_epochs):
             print_line()
             print('Starting epoch ' + str(e))
             print_line()
