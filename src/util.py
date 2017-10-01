@@ -306,7 +306,7 @@ def chunks(l, m, n, architecture):
 # Evaluate L1 distance on valid data for yearbook dataset
 def evaluateYearbookFromModel(model, architecture, sample=False):
     valid_data = listYearbook(False, True, sample)
-    valid_images, valid_labels = get_data_and_labels(valid_data, YEARBOOK_VALID_PATH)
+    valid_images = [path.join(YEARBOOK_VALID_PATH, item[0]) for item in valid_data]
     valid_years = [int(item[1]) for item in valid_data]
 
     total_count = len(valid_data)
