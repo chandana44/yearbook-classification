@@ -148,8 +148,8 @@ def resnet50_model(img_rows, img_cols, color_type=1, num_classes=None, use_pretr
     model = Model(img_input, x_newfc)
 
     if fine_tuning_method == FREEZE_INITIAL_LAYERS:
-        print(get_time_string() + 'Freezing last 6 layers of the network..')
-        for layer in model.layers[:-6]:
+        print(get_time_string() + 'Freezing conv layers of the network..')
+        for layer in model.layers[:-3]:
             layer.trainable = False
 
     # Learning rate is changed to 0.001
