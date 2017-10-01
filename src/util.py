@@ -305,19 +305,22 @@ def chunks(l, m, n, architecture):
 
 # Evaluate L1 distance on valid data for yearbook dataset
 def evaluateYearbookFromModel(model, architecture, sample=False):
-    val_list = listYearbook(False, True, sample)
+    valid_data = listYearbook(False, True, sample)
+    valid_images, valid_labels = get_data_and_labels(valid_data, YEARBOOK_VALID_PATH)
+    valid_years = [int(item[1]) for item in valid_data]
 
-    total_count = len(val_list)
+    total_count = len(valid_data)
     l1_dist = 0.0
-    count = 1
+    batch_size = 128
+    count = 0
     print(get_time_string() + 'Total validation data: ' + str(total_count))
-    for ground_truth_entry in val_list:
-        print get_time_string() + 'validating '+ str(count) + '/' + str(total_count)
-        full_file_path = path.join(YEARBOOK_VALID_PATH, ground_truth_entry[0])
-        pred_year = np.argmax(model.predict(preprocess_image_batch([full_file_path], architecture))) + 1900
-        truth_year = int(ground_truth_entry[1])
-        l1_dist += abs(pred_year - truth_year)
-        count += 1
+
+    for x_chunk, y_chunk in chunks(valid_images, valid_years, batch_size, architecture):
+        print get_time_string() + 'validating ' + str(count+1) + ' - ' + str(count + batch_size)
+        predictions = model.predict(x_chunk)
+        years = np.array([np.argmax(p) + 1900 for p in predictions])
+        l1_dist += np.sum(years - y_chunk)
+        count += batch_size
 
     l1_dist /= total_count
     print(get_time_string() + 'L1 distance for validation set: ' + str(l1_dist))
