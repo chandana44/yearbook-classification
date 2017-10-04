@@ -52,6 +52,35 @@ def predictTestYearbookFromModel(model, architecture, sample=False):
     output.close()
 
 
+def getModels(models_checkpoints, use_pretraining=True,
+              pretrained_weights_path=None,
+              train_dir=None, val_dir=None, fine_tuning_method=None,
+              batch_size=None, num_epochs=10,
+              optimizer='sgd', loss='mse',
+              initial_epoch=0,
+              sample=0):
+    models = []
+    architectures = []
+    for model_checkpoint in models_checkpoints:
+        architecture = model_checkpoint.split(':')[0]
+        checkpoint_file_name = model_checkpoint.split(':')[1]
+
+        if architecture not in ARCHITECTURES:
+            raise Exception('Invalid architecture type!')
+
+        yearbookModel = YearbookModel()
+        models.append(yearbookModel.getModel(model_architecture=architecture, load_saved_model=1,
+                                             model_save_path=CHECKPOINT_BASE_DIR + checkpoint_file_name,
+                                             initial_epoch=initial_epoch, use_pretraining=use_pretraining,
+                                             pretrained_weights_path=pretrained_weights_path,
+                                             fine_tuning_method=fine_tuning_method, batch_size=batch_size,
+                                             num_epochs=num_epochs, optimizer=optimizer, loss=loss,
+                                             sample=sample))
+        architectures.append(architecture)
+
+    return models, architectures
+
+
 if __name__ == "__main__":
     if is_using_gpu():
         print('Program is using GPU..')
@@ -99,11 +128,32 @@ if __name__ == "__main__":
                         help="sample: whether to use sample dataset",
                         required=False, default=0, type=int)
 
+    parser.add_argument("--ensemble", dest="ensemble",
+                        help="ensemble: whether to use multiple saved models to calculate scores on validation/test data",
+                        required=False, default=0, type=int)
+    parser.add_argument("--ensemble_models", dest="ensemble_models",
+                        help="ensemble_models: alexnet:checkpoint1.h5,vgg16:checkpoint2.h5 etc",
+                        required=False, default=None)
+
     args = parser.parse_args()
     print('Args provided: ' + str(args))
 
     print(get_time_string() + 'Operating on ' + args.dataset_type + ' dataset..')
 
+    if args.ensemble == 1:
+        if args.ensemble_models is None:
+            raise Exception('ensemble is 1 but no models/checkpoint files specified!')
+        models_checkpoints = args.ensemble_models.split(',')
+        models, architectures = getModels(models_checkpoints, use_pretraining=args.use_pretraining,
+                                          pretrained_weights_path=pretrained_weights_path_map[args.model_architecture],
+                                          train_dir=None, val_dir=None, fine_tuning_method=args.fine_tuning_method,
+                                          batch_size=args.batch_size, num_epochs=args.num_epochs,
+                                          optimizer=args.optimizer, loss=args.loss,
+                                          initial_epoch=1000, # Just returning the model without any further training
+                                          sample=args.sample)
+
+        exit(0)
+        
     if args.model_architecture not in ARCHITECTURES:
         raise Exception('Invalid model architecture type!')
 
@@ -118,7 +168,7 @@ if __name__ == "__main__":
         trained_model = model.getModel(model_architecture=args.model_architecture,
                                        load_saved_model=args.load_saved_model,
                                        model_save_path=CHECKPOINT_BASE_DIR + args.checkpoint_file_name,
-                                       use_pretraining=True,
+                                       use_pretraining=args.use_pretraining,
                                        pretrained_weights_path=pretrained_weights_path_map[args.model_architecture],
                                        train_dir=None, val_dir=None, fine_tuning_method=args.fine_tuning_method,
                                        batch_size=args.batch_size, num_epochs=args.num_epochs,
