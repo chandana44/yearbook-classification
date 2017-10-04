@@ -327,5 +327,60 @@ def evaluateYearbookFromModel(model, architecture, sample=False):
     return l1_dist
 
 
+# Evaluate L1 distance on valid data for yearbook dataset by ensembling list of models
+# Right now, it calculates mean, median and closest to mean L1 distances
+def evaluateYearbookFromEnsembledModels(models_architectures_tuples, sample=False):
+    valid_data = listYearbook(False, True, sample)
+    valid_images = [path.join(YEARBOOK_VALID_PATH, item[0]) for item in valid_data]
+    valid_years = [int(item[1]) for item in valid_data]
+
+    total_count = len(valid_data)
+    batch_size = 128
+    count = 0
+    print(get_time_string() + 'Total validation data: ' + str(total_count))
+
+    # Matrix of predictions where each column corresponds to one architecture
+    mat = np.zeros(total_count, len(models_architectures_tuples))
+    i = 0
+
+    for (model, architecture) in models_architectures_tuples:
+        print(get_time_string() + 'Starting validation for architecture ' + architecture)
+        years_full = np.empty(0) # Contains predictions for the entire validation set
+        for x_chunk, y_chunk in chunks(valid_images, valid_years, batch_size, architecture):
+            print(get_time_string() + 'Validating ' + str(count+1) + ' - ' + str(count + batch_size))
+            predictions = model.predict(x_chunk)
+            years = np.array([np.argmax(p) + 1900 for p in predictions])
+            np.concatenate((years_full, years), axis=0)
+        mat[:, i] = years_full
+        i += 1
+
+    l1_dist_mean = 0.0
+    l1_dist_median = 0.0
+    l1_dist_closest_to_mean = 0.0
+
+    for i in range(total_count):
+        m = mat[i, :]  # 1-d array with predictions for a particular image from different architectures
+        mean = np.mean(m)
+        closest_to_mean = mean
+        median = np.median(m)
+
+        mx = 10000
+        for x in np.nditer(m):
+            if abs(x - mean) < mx:
+                mx = abs(x - mean)
+                closest_to_mean = x
+
+        l1_dist_mean += abs(mean - valid_years[i])
+        l1_dist_median += abs(median - valid_years[i])
+        l1_dist_closest_to_mean += abs(closest_to_mean - valid_years[i])
+
+    l1_dist_mean /= total_count
+    l1_dist_median /= total_count
+    l1_dist_closest_to_mean /= total_count
+
+    print(get_time_string() + 'L1 distance for validation set: [mean, median, closest to mean] = [' +
+          str(l1_dist_mean) + ', ' + str(l1_dist_median) + ', ' + str(l1_dist_closest_to_mean) + ']')
+
+
 def print_line():
     print('-' * 100)

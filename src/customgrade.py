@@ -59,8 +59,7 @@ def getModels(models_checkpoints, use_pretraining=True,
               optimizer='sgd', loss='mse',
               initial_epoch=0,
               sample=0):
-    models = []
-    architectures = []
+    models_architectures_tuples = []
     for model_checkpoint in models_checkpoints:
         architecture = model_checkpoint.split(':')[0]
         checkpoint_file_name = model_checkpoint.split(':')[1]
@@ -69,16 +68,16 @@ def getModels(models_checkpoints, use_pretraining=True,
             raise Exception('Invalid architecture type!')
 
         yearbookModel = YearbookModel()
-        models.append(yearbookModel.getModel(model_architecture=architecture, load_saved_model=1,
-                                             model_save_path=CHECKPOINT_BASE_DIR + checkpoint_file_name,
-                                             initial_epoch=initial_epoch, use_pretraining=use_pretraining,
-                                             pretrained_weights_path=pretrained_weights_path,
-                                             fine_tuning_method=fine_tuning_method, batch_size=batch_size,
-                                             num_epochs=num_epochs, optimizer=optimizer, loss=loss,
-                                             sample=sample))
-        architectures.append(architecture)
+        this_model = yearbookModel.getModel(model_architecture=architecture, load_saved_model=1,
+                                            model_save_path=CHECKPOINT_BASE_DIR + checkpoint_file_name,
+                                            initial_epoch=initial_epoch, use_pretraining=use_pretraining,
+                                            pretrained_weights_path=pretrained_weights_path,
+                                            fine_tuning_method=fine_tuning_method, batch_size=batch_size,
+                                            num_epochs=num_epochs, optimizer=optimizer, loss=loss,
+                                            sample=sample)
+        models_architectures_tuples.append((this_model, architecture))
 
-    return models, architectures
+    return models_architectures_tuples
 
 
 if __name__ == "__main__":
@@ -143,17 +142,27 @@ if __name__ == "__main__":
     if args.ensemble == 1:
         if args.ensemble_models is None:
             raise Exception('ensemble is 1 but no models/checkpoint files specified!')
-        models_checkpoints = args.ensemble_models.split(',')
-        models, architectures = getModels(models_checkpoints, use_pretraining=args.use_pretraining,
-                                          pretrained_weights_path=pretrained_weights_path_map[args.model_architecture],
-                                          train_dir=None, val_dir=None, fine_tuning_method=args.fine_tuning_method,
-                                          batch_size=args.batch_size, num_epochs=args.num_epochs,
-                                          optimizer=args.optimizer, loss=args.loss,
-                                          initial_epoch=1000, # Just returning the model without any further training
-                                          sample=args.sample)
+        models_checkpoints = args.ensemble_models.split(
+            ',')  # array of entries of format <architecture>:<checkpoint_file>
+        models_architectures_tuples = getModels(models_checkpoints, use_pretraining=args.use_pretraining,
+                                                pretrained_weights_path=pretrained_weights_path_map[args.model_architecture],
+                                                train_dir=None, val_dir=None,
+                                                fine_tuning_method=args.fine_tuning_method,
+                                                batch_size=args.batch_size, num_epochs=args.num_epochs,
+                                                optimizer=args.optimizer, loss=args.loss,
+                                                initial_epoch=1000,
+                                                # Just returning the model without any further training
+                                                sample=args.sample)
+        if args.type == 'valid':
+            evaluateYearbookFromEnsembledModels(models_architectures_tuples=models_architectures_tuples, sample=args.sample)
+        elif args.type == 'test':  # TODO implement ensembling while testing also
+            pass
+            # predictTestYearbookFromModel(trained_model, args.model_architecture, args.sample)
+        else:
+            print(get_time_string() + "Unknown type '%s'", args.type)
 
         exit(0)
-        
+
     if args.model_architecture not in ARCHITECTURES:
         raise Exception('Invalid model architecture type!')
 
