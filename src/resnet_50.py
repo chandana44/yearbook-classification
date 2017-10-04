@@ -153,8 +153,12 @@ def resnet50_model(img_rows, img_cols, color_type=1, num_classes=None, use_pretr
             layer.trainable = False
 
     # Learning rate is changed to 0.001
-    sgd = SGD(lr=1e-3, decay=1e-6, momentum=0.9, nesterov=True)
-    model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics=['accuracy'])
+    if optimizer == 'sgd':
+        optimizer = SGD(lr=1e-2, decay=1e-6, momentum=0.9, nesterov=True)
+    #sgd = SGD(lr=1e-3, decay=1e-6, momentum=0.9, nesterov=True)
+    if loss == 'l1':
+        loss = get_l1_loss
+    model.compile(optimizer=optimizer, loss=loss)
 
     print 'number of layers: ', len(model.layers)
     print(model.summary())
