@@ -340,7 +340,7 @@ def evaluateYearbookFromEnsembledModels(models_architectures_tuples, sample=Fals
     print(get_time_string() + 'Total validation data: ' + str(total_count))
 
     # Matrix of predictions where each column corresponds to one architecture
-    mat = np.zeros(total_count, len(models_architectures_tuples))
+    mat = np.zeros((total_count, len(models_architectures_tuples)))
     i = 0
 
     for (model, architecture) in models_architectures_tuples:
@@ -350,7 +350,7 @@ def evaluateYearbookFromEnsembledModels(models_architectures_tuples, sample=Fals
             print(get_time_string() + 'Validating ' + str(count+1) + ' - ' + str(count + batch_size))
             predictions = model.predict(x_chunk)
             years = np.array([np.argmax(p) + 1900 for p in predictions])
-            np.concatenate((years_full, years), axis=0)
+            years_full = np.concatenate((years_full, years), axis=0)
         mat[:, i] = years_full
         i += 1
 
