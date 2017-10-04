@@ -387,8 +387,9 @@ class YearbookModel:
             print(get_time_string() + 'Saving model to ' + file_name)
             model.save(file_name)
 
-            print(get_time_string() + 'Epoch ' + str(e) + ' complete. Evaluating on validation set..')
-            evaluateYearbookFromModel(model=model, architecture=RESNET50_ARCHITECTURE, sample=sample)
+            if (e % 5 == 0):
+                print(get_time_string() + 'Epoch ' + str(e) + ' complete. Evaluating on validation set..')
+                evaluateYearbookFromModel(model=model, architecture=RESNET50_ARCHITECTURE, sample=sample)
 
             print_line()
 
