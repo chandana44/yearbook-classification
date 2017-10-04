@@ -36,6 +36,12 @@ class YearbookModel:
         filepath = path_wo_ext + '-' + str(epoch) + ext
         return filepath
 
+    def getWeightCheckpointFileName(self, base_model_save_path, epoch):
+        ext = '.h5'
+        path_wo_ext = base_model_save_path.split(ext)[0]
+        filepath = path_wo_ext + '-' + str(epoch) + '-weights' + ext
+        return filepath
+
     def getModel(self, model_architecture='alexnet', load_saved_model=False, model_save_path=None,
                  use_pretraining=False,
                  pretrained_weights_path=None, train_dir=None, val_dir=None, fine_tuning_method=END_TO_END_FINE_TUNING,
@@ -110,11 +116,18 @@ class YearbookModel:
         img_rows, img_cols = 227, 227  # Resolution of inputs
         channels = 3
 
+        model = alexnet_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=NUM_CLASSES,
+                              use_pretraining=use_pretraining, pretrained_weights_path=pretrained_weights_path,
+                              optimizer=optimizer, loss=loss, fine_tuning_method=fine_tuning_method, )
+
         if load_saved_model:
             if model_save_path is None:
                 raise Exception('Unable to load trained model as model_save_path is None!')
-            print(get_time_string() + 'Loading saved model from ' + model_save_path + '..')
-            model = load_model(model_save_path)
+            print(get_time_string() + 'Loading saved model weights from ' + model_save_path + '..')
+            model = alexnet_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=NUM_CLASSES,
+                                  use_pretraining=use_pretraining, pretrained_weights_path=pretrained_weights_path,
+                                  optimizer=optimizer, loss=loss, fine_tuning_method=fine_tuning_method,
+                                  weights_path=model_save_path)
         else:
             model = alexnet_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=NUM_CLASSES,
                                   use_pretraining=use_pretraining, pretrained_weights_path=pretrained_weights_path,
@@ -145,6 +158,10 @@ class YearbookModel:
             file_name = self.getCheckpointFileName(base_model_save_path=model_save_path, epoch=e)
             print(get_time_string() + 'Saving model to ' + file_name)
             model.save(file_name)
+
+            file_name = self.getWeightCheckpointFileName(base_model_save_path=model_save_path, epoch=e)
+            print(get_time_string() + 'Saving model weights to ' + file_name)
+            model.save_weights(file_name)
 
             print(get_time_string() + 'Epoch ' + str(e) + ' complete. Evaluating on validation set..')
             evaluateYearbookFromModel(model=model, architecture=ALEXNET_ARCHITECTURE, sample=sample)

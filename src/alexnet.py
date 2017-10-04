@@ -13,7 +13,8 @@ from keras.optimizers import SGD
 
 
 def alexnet_model(img_rows, img_cols, channels=1, num_classes=None, use_pretraining=True,
-                  pretrained_weights_path=None, fine_tuning_method=END_TO_END_FINE_TUNING, optimizer=None, loss=None, ):
+                  pretrained_weights_path=None, fine_tuning_method=END_TO_END_FINE_TUNING, optimizer=None, loss=None,
+                  weights_path=None):
     inputs = Input(shape=(channels, img_rows, img_cols))
     conv_1 = Convolution2D(96, 11, 11, subsample=(4, 4), activation='relu',
                            name='conv_1')(inputs)
@@ -53,11 +54,14 @@ def alexnet_model(img_rows, img_cols, channels=1, num_classes=None, use_pretrain
     prediction = Activation('softmax', name='softmax')(dense_3)
 
     model = Model(input=inputs, output=prediction)
-    if use_pretraining:
-        if pretrained_weights_path:
-            model.load_weights(pretrained_weights_path)
-        else:
-            raise Exception('use_pretraining is true but pretrained_weights_path is not specified!')
+
+    # Load from ImageNet pretrained weights only if creating a new model
+    if weights_path is None:
+        if use_pretraining:
+            if pretrained_weights_path:
+                model.load_weights(pretrained_weights_path)
+            else:
+                raise Exception('use_pretraining is true but pretrained_weights_path is not specified!')
 
     # Removing the final dense_3 layer and adding the layers with correct classification size
     model.layers.pop()
@@ -74,6 +78,10 @@ def alexnet_model(img_rows, img_cols, channels=1, num_classes=None, use_pretrain
         for layer in model.layers[:-6]:
             layer.trainable = False
 
+    # Load from previously saved weights
+    if weights_path is not None:
+        model.load_weights(weights_path)
+
     if optimizer == 'sgd':
         optimizer = SGD(lr=1e-3, decay=1e-6, momentum=0.9, nesterov=True)
     if loss == 'l1':
@@ -82,7 +90,7 @@ def alexnet_model(img_rows, img_cols, channels=1, num_classes=None, use_pretrain
     print(get_time_string() + 'Compiling the model..')
     model.compile(optimizer=optimizer, loss=loss)
 
-    print 'number of layers: ', len(model.layers)
+    print('Number of layers: ' + str(len(model.layers)))
     print(model.summary())
 
     return model
