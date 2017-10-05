@@ -28,6 +28,8 @@ VGG19_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/vgg19_weights_th_dim_order
 RESNET152_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/resnet152_weights.h5'
 RESNET50_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/resnet50_weights.h5'
 DENSENET169_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/densenet169_weights_th.h5'
+DENSENET121_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/densenet121_weights_th.h5'
+DENSENET161_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/densenet161_weights_th.h5'
 KAGGLE_PRETRAINED_WEIGHT_PATH = ''
 
 pretrained_weights_path_map = {ALEXNET_ARCHITECTURE: ALEXNET_PRETRAINED_WEIGHT_PATH,
@@ -36,6 +38,8 @@ pretrained_weights_path_map = {ALEXNET_ARCHITECTURE: ALEXNET_PRETRAINED_WEIGHT_P
                                RESNET152_ARCHITECTURE: RESNET152_PRETRAINED_WEIGHT_PATH,
                                RESNET50_ARCHITECTURE: RESNET50_PRETRAINED_WEIGHT_PATH,
                                DENSENET169_ARCHITECTURE: DENSENET169_PRETRAINED_WEIGHT_PATH,
+                               DENSENET161_ARCHITECTURE: DENSENET161_PRETRAINED_WEIGHT_PATH,
+                               DENSENET121_ARCHITECTURE: DENSENET121_PRETRAINED_WEIGHT_PATH,
                                KAGGLE_ARCHITECTURE: KAGGLE_PRETRAINED_WEIGHT_PATH}
 
 
@@ -98,7 +102,7 @@ if __name__ == "__main__":
                         help="Dataset: valid/test", required=True)
 
     parser.add_argument("--model_architecture", dest="model_architecture",
-                        help="Model architecture: alexnet/vgg16/vgg19/resnet152/resnet50/densenet169", required=True)
+                        help="Model architecture: alexnet/vgg16/vgg19/resnet152/resnet50/densenet169/densenet121/densenet161", required=True)
     parser.add_argument("--load_saved_model", dest="load_saved_model",
                         help="load_saved_model: Whether to use saved model",
                         required=False, default=0, type=int)
