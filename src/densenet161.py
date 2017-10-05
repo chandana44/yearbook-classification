@@ -74,12 +74,12 @@ def densenet161_model(img_rows, img_cols, channels=1, nb_dense_block=4, growth_r
     x = BatchNormalization(epsilon=eps, axis=concat_axis, name='conv' + str(final_stage) + '_blk_bn')(x)
     x = Scale(axis=concat_axis, name='conv' + str(final_stage) + '_blk_scale')(x)
     x = Activation('relu', name='relu' + str(final_stage) + '_blk')(x)
-    x = GlobalAveragePooling2D(name='pool' + str(final_stage))(x)
 
-    x = Dense(1000, name='fc6')(x)
-    x = Activation('softmax', name='prob')(x)
+    x_fc = GlobalAveragePooling2D(name='pool' + str(final_stage))(x)
+    x_fc = Dense(1000, name='fc6')(x_fc)
+    x_fc = Activation('softmax', name='prob')(x_fc)
 
-    model = Model(img_input, x, name='densenet')
+    model = Model(img_input, x_fc, name='densenet')
 
     if pretrained_weights_path is not None:
         model.load_weights(pretrained_weights_path)

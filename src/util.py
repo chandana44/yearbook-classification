@@ -214,6 +214,7 @@ def get_data_and_labels(data, base_path):
 
     return images, np.array(labels)
 
+
 def get_streetview_data_and_labels(data, base_path):
     """
     :param data: list of tuples of images name, lats and longs
@@ -344,6 +345,7 @@ def chunks(l, m, n, architecture):
     for i in range(0, len(l), n):
         yield preprocess_image_batch(l[i:i + n], architecture), m[i: i + n]
 
+
 # Evaluate L1 distance on valid data for yearbook dataset
 def evaluateYearbookFromModel(model, architecture, sample=False):
     valid_data = listYearbook(False, True, sample)
@@ -357,7 +359,7 @@ def evaluateYearbookFromModel(model, architecture, sample=False):
     print(get_time_string() + 'Total validation data: ' + str(total_count))
 
     for x_chunk, y_chunk in chunks(valid_images, valid_years, batch_size, architecture):
-        print get_time_string() + 'validating ' + str(count+1) + ' - ' + str(count + batch_size)
+        print get_time_string() + 'validating ' + str(count + 1) + ' - ' + str(count + batch_size)
         predictions = model.predict(x_chunk)
         years = np.array([np.argmax(p) + 1900 for p in predictions])
         l1_dist += np.sum(abs(years - y_chunk))
@@ -377,7 +379,6 @@ def evaluateYearbookFromEnsembledModels(models_architectures_tuples, sample=Fals
 
     total_count = len(valid_data)
     batch_size = 128
-    count = 0
     print(get_time_string() + 'Total validation data: ' + str(total_count))
 
     # Matrix of predictions where each column corresponds to one architecture
@@ -385,13 +386,15 @@ def evaluateYearbookFromEnsembledModels(models_architectures_tuples, sample=Fals
     i = 0
 
     for (model, architecture) in models_architectures_tuples:
+        count = 0
         print(get_time_string() + 'Starting validation for architecture ' + architecture)
-        years_full = np.empty(0) # Contains predictions for the entire validation set
+        years_full = np.empty(0)  # Contains predictions for the entire validation set
         for x_chunk, y_chunk in chunks(valid_images, valid_years, batch_size, architecture):
-            print(get_time_string() + 'Validating ' + str(count+1) + ' - ' + str(count + batch_size))
+            print(get_time_string() + 'Validating ' + str(count + 1) + ' - ' + str(count + batch_size))
             predictions = model.predict(x_chunk)
             years = np.array([np.argmax(p) + 1900 for p in predictions])
             years_full = np.concatenate((years_full, years), axis=0)
+            count += batch_size
         mat[:, i] = years_full
         i += 1
 
@@ -422,9 +425,9 @@ def evaluateYearbookFromEnsembledModels(models_architectures_tuples, sample=Fals
     print(get_time_string() + 'L1 distance for validation set: [mean, median, closest to mean] = [' +
           str(l1_dist_mean) + ', ' + str(l1_dist_median) + ', ' + str(l1_dist_closest_to_mean) + ']')
 
+
 # Evaluate L1 distance on valid data for geolocation dataset
 def evaluateStreetviewFromModel(model, architecture, sample=False):
-
     valid_data = listStreetView(False, True, sample)
     valid_images = [path.join(STREETVIEW_VALID_PATH, item[0]) for item in valid_data]
     valid_gps = [[float(item[1]), float(item[2])] for item in valid_data]
@@ -446,6 +449,7 @@ def evaluateStreetviewFromModel(model, architecture, sample=False):
     l1_dist /= total_count
     print(get_time_string() + 'L1 distance for validation set: ' + str(l1_dist))
     return l1_dist
+
 
 def numToRadians(x):
     return x / 180.0 * pi
