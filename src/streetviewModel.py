@@ -45,7 +45,6 @@ class StreetViewModel:
                                                            model_save_path,
                                                            use_pretraining,
                                                            pretrained_weights_path,
-                                                           train_dir, val_dir,
                                                            fine_tuning_method,
                                                            batch_size, num_epochs,
                                                            optimizer, loss,
@@ -75,7 +74,7 @@ class StreetViewModel:
 
         print(get_time_string() + 'Creating Kaggle model..')
 
-        img_rows, img_cols = 224, 224  # Resolution of inputs
+        img_rows, img_cols = 100, 100  # Resolution of inputs
         channels = 3
 
         if load_saved_model:
@@ -84,7 +83,7 @@ class StreetViewModel:
             print(get_time_string() + 'Loading saved model from ' + model_save_path + '..')
             model = load_model(model_save_path)
         else:
-            model = KaggleNetModel(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=NUM_CLASSES,
+            model = KaggleNetModel(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=2,
                                    use_pretraining=use_pretraining, pretrained_weights_path=pretrained_weights_path,
                                    optimizer=optimizer, loss=loss, fine_tuning_method=fine_tuning_method)
 

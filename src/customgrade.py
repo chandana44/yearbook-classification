@@ -27,12 +27,14 @@ VGG16_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/vgg16_weights_th_dim_order
 RESNET152_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/resnet152_weights.h5'
 RESNET50_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/resnet50_weights.h5'
 DENSENET169_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/densenet169_weights_th.h5'
+KAGGLE_PRETRAINED_WEIGHT_PATH = ''
 
 pretrained_weights_path_map = {ALEXNET_ARCHITECTURE: ALEXNET_PRETRAINED_WEIGHT_PATH,
                                VGG16_ARCHITECTURE: VGG16_PRETRAINED_WEIGHT_PATH,
                                RESNET152_ARCHITECTURE: RESNET152_PRETRAINED_WEIGHT_PATH,
                                RESNET50_ARCHITECTURE: RESNET50_PRETRAINED_WEIGHT_PATH,
-                               DENSENET169_ARCHITECTURE: DENSENET169_PRETRAINED_WEIGHT_PATH}
+                               DENSENET169_ARCHITECTURE: DENSENET169_PRETRAINED_WEIGHT_PATH,
+                               KAGGLE_ARCHITECTURE: KAGGLE_PRETRAINED_WEIGHT_PATH}
 
 
 # Predict label for test data on yearbook dataset

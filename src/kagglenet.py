@@ -6,13 +6,13 @@ from keras.layers.convolutional import Conv2D
 from keras.layers.convolutional import MaxPooling2D
 from keras.layers.normalization import BatchNormalization
 from keras import optimizers
-
+from util import *
 
 def KaggleNetModel(img_rows, img_cols, channels=1, num_classes=None, use_pretraining=True,
                    pretrained_weights_path=None, fine_tuning_method=END_TO_END_FINE_TUNING, optimizer=None,
                    loss=None):
     model = Sequential()
-    model.add(Conv2D(32, (3, 3), activation='relu', input_shape=(img_rows, img_cols, channels)))
+    model.add(Conv2D(32, (3, 3), activation='relu', input_shape=(channels, img_rows, img_cols)))
     model.add(MaxPooling2D((2, 2)))
     model.add(BatchNormalization())
     model.add(Dropout(0.3))
