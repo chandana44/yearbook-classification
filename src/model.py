@@ -155,9 +155,10 @@ class YearbookModel:
                 completed += len(x_chunk)
                 print(get_time_string() + str(completed) + ' of ' + str(len(train_images)) + ' complete. ')
 
-            file_name = self.getCheckpointFileName(base_model_save_path=model_save_path, epoch=e)
-            print(get_time_string() + 'Saving model to ' + file_name)
-            model.save(file_name)
+            # Not saving model since there's some bug while loading from saved model
+            # file_name = self.getCheckpointFileName(base_model_save_path=model_save_path, epoch=e)
+            # print(get_time_string() + 'Saving model to ' + file_name)
+            # model.save(file_name)
 
             file_name = self.getWeightCheckpointFileName(base_model_save_path=model_save_path, epoch=e)
             print(get_time_string() + 'Saving model weights to ' + file_name)
