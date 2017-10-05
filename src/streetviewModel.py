@@ -36,7 +36,7 @@ class StreetViewModel:
             raise Exception('Invalid architecture name!')
 
         # get train and validation data
-        train_data = listStreetView(True, False)
+        train_data = listStreetView(True, False, sample)
 
         train_images, train_gps = get_streetview_data_and_labels(train_data, STREETVIEW_TRAIN_PATH)
 
@@ -116,7 +116,7 @@ class StreetViewModel:
             model.save(file_name)
 
             print(get_time_string() + 'Evaluating on validation set..')
-            evaluateStreetviewFromModel(model=model, architecture=KAGGLE_ARCHITECTURE)
+            evaluateStreetviewFromModel(model=model, architecture=KAGGLE_ARCHITECTURE, sample=sample)
 
             print_line()
 
