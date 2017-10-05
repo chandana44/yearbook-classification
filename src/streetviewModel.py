@@ -74,7 +74,7 @@ class StreetViewModel:
 
         print(get_time_string() + 'Creating Kaggle model..')
 
-        img_rows, img_cols = 100, 100  # Resolution of inputs
+        img_rows, img_cols = 224, 224  # Resolution of inputs
         channels = 3
 
         if load_saved_model:

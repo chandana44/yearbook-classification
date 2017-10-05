@@ -56,7 +56,7 @@ image_sizes = {ALEXNET_ARCHITECTURE: (256, 256),
                RESNET152_ARCHITECTURE: (256, 256),
                RESNET50_ARCHITECTURE: (256, 256),
                DENSENET169_ARCHITECTURE: (224, 224),
-               KAGGLE_ARCHITECTURE: (100, 100)}
+               KAGGLE_ARCHITECTURE: (224, 224)}
 
 crop_sizes = {ALEXNET_ARCHITECTURE: (227, 227),
               VGG16_ARCHITECTURE: None,

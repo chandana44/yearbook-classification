@@ -33,7 +33,7 @@ def KaggleNetModel(img_rows, img_cols, channels=1, num_classes=None, use_pretrai
     model.add(BatchNormalization())
     model.add(Dropout(0.3))
     model.add(Dense(num_classes))
-    model.compile(loss='mean_squared_error', optimizer=optimizers.RMSprop(lr=1e-4))
+    model.compile(loss='mean_squared_error', optimizer=optimizers.RMSprop(lr=1e-2))
 
     print(model.summary())
 
