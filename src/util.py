@@ -7,6 +7,7 @@ from scipy.misc import imread
 from scipy.misc import imresize
 from theano import function, config, shared, tensor
 from keras import backend as K
+from math import sin, cos, atan2, sqrt, pi
 
 # If you want this to work do not move this file
 SRC_PATH = path.dirname(path.abspath(__file__))
@@ -22,6 +23,9 @@ YEARBOOK_VALID_PATH = path.join(YEARBOOK_PATH, 'valid')
 STREETVIEW_PATH = path.join(DATA_PATH, "geo")
 STREETVIEW_TXT_PREFIX = path.join(STREETVIEW_PATH, "geo")
 
+STREETVIEW_TRAIN_PATH = path.join(STREETVIEW_PATH, 'train')
+STREETVIEW_VALID_PATH = path.join(STREETVIEW_PATH, 'valid')
+
 NUM_CLASSES = 118
 
 yb_r = re.compile("(\d\d\d\d)_(.*)_(.*)_(.*)_(.*)")
@@ -34,32 +38,39 @@ VGG19_ARCHITECTURE = 'vgg19'
 RESNET152_ARCHITECTURE = 'resnet152'
 RESNET50_ARCHITECTURE = 'resnet50'
 DENSENET169_ARCHITECTURE = 'densenet169'
+KAGGLE_ARCHITECTURE = 'kaggle'
 
 ARCHITECTURES = [ALEXNET_ARCHITECTURE,
                  VGG16_ARCHITECTURE,
                  VGG19_ARCHITECTURE,
                  RESNET152_ARCHITECTURE,
                  RESNET50_ARCHITECTURE,
-                 DENSENET169_ARCHITECTURE]
+                 DENSENET169_ARCHITECTURE,
+                 KAGGLE_ARCHITECTURE]
+
+
 
 # dictionary for arcitectures-image sizes
 image_sizes = {ALEXNET_ARCHITECTURE: (256, 256),
                VGG16_ARCHITECTURE: (224, 224),
                RESNET152_ARCHITECTURE: (256, 256),
                RESNET50_ARCHITECTURE: (256, 256),
-               DENSENET169_ARCHITECTURE: (224, 224)}
+               DENSENET169_ARCHITECTURE: (224, 224),
+               KAGGLE_ARCHITECTURE: (256, 256)}
 
 crop_sizes = {ALEXNET_ARCHITECTURE: (227, 227),
               VGG16_ARCHITECTURE: None,
               RESNET152_ARCHITECTURE: (224, 224),
               RESNET50_ARCHITECTURE: (224, 224),
-              DENSENET169_ARCHITECTURE: None}
+              DENSENET169_ARCHITECTURE: None,
+              KAGGLE_ARCHITECTURE: (224, 224)}
 
 color_modes = {ALEXNET_ARCHITECTURE: "rgb",
                VGG16_ARCHITECTURE: "rgb",
                RESNET152_ARCHITECTURE: "rgb",
                RESNET50_ARCHITECTURE: "rgb",
-               DENSENET169_ARCHITECTURE: "rgb"}
+               DENSENET169_ARCHITECTURE: "rgb",
+               KAGGLE_ARCHITECTURE: "rgb"}
 
 END_TO_END_FINE_TUNING = 'end-to-end'
 PHASE_BY_PHASE_FINE_TUNING = 'phase-by-phase'
@@ -185,6 +196,19 @@ def get_data_and_labels(data, base_path):
 
     return images, np.array(labels)
 
+def get_streetview_data_and_labels(data, base_path):
+    """
+    :param data: list of tuples of images name, lats and longs
+    :param base_path: base path where the images are present
+    :return: Returns list of full image path names and list of lats and longs
+
+    """
+
+    images = [path.join(base_path, item[0]) for item in data]
+    gps = [[item[1], item[2]] for item in data]
+
+    return images, np.array(gps)
+
 
 def preprocess_image_batch(image_paths, architecture, out=None):
     """
@@ -302,7 +326,6 @@ def chunks(l, m, n, architecture):
     for i in range(0, len(l), n):
         yield preprocess_image_batch(l[i:i + n], architecture), m[i: i + n]
 
-
 # Evaluate L1 distance on valid data for yearbook dataset
 def evaluateYearbookFromModel(model, architecture, sample=False):
     valid_data = listYearbook(False, True, sample)
@@ -380,6 +403,55 @@ def evaluateYearbookFromEnsembledModels(models_architectures_tuples, sample=Fals
 
     print(get_time_string() + 'L1 distance for validation set: [mean, median, closest to mean] = [' +
           str(l1_dist_mean) + ', ' + str(l1_dist_median) + ', ' + str(l1_dist_closest_to_mean) + ']')
+
+# Evaluate L1 distance on valid data for geolocation dataset
+def evaluateStreetviewFromModel(model, architecture):
+
+    valid_data = listStreetView(False, True)
+    valid_images = [path.join(STREETVIEW_VALID_PATH, item[0]) for item in valid_data]
+    valid_gps = [[item[1], item[2]] for item in valid_data]
+
+    total_count = len(valid_data)
+    l1_dist = 0.0
+    batch_size = 128
+    count = 0
+    print(get_time_string() + 'Total validation data: ' + str(total_count))
+
+    for x_chunk, y_chunk in chunks(valid_images, valid_gps, batch_size, architecture):
+        print(get_time_string() + 'validating ' + str(count + 1) + ' - ' + str(count + batch_size))
+        predictions = model.predict(x_chunk)
+        latslongs = np.array([[p[0], p[1]] for p in predictions])
+        for i in range(0, len(y_chunk)):
+            l1_dist += dist(latslongs[0], latslongs[1], float(y_chunk[0]), float(y_chunk[1]))
+        count += batch_size
+
+    l1_dist /= total_count
+    print(get_time_string() + 'L1 distance for validation set: ' + str(l1_dist))
+    return l1_dist
+
+def numToRadians(x):
+    return x / 180.0 * pi
+
+
+# Calculate distance (km) between Latitude/Longitude points
+# Reference: http://www.movable-type.co.uk/scripts/latlong.html
+EARTH_RADIUS = 6371
+
+
+def dist(lat1, lon1, lat2, lon2):
+    lat1 = numToRadians(lat1)
+    lon1 = numToRadians(lon1)
+    lat2 = numToRadians(lat2)
+    lon2 = numToRadians(lon2)
+
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+
+    a = sin(dlat / 2.0) * sin(dlat / 2.0) + cos(lat1) * cos(lat2) * sin(dlon / 2.0) * sin(dlon / 2.0)
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+    d = EARTH_RADIUS * c
+    return d
 
 
 def print_line():

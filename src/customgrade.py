@@ -8,6 +8,7 @@ from argparse import ArgumentParser
 from model import *
 from run import *
 from util import *
+from streetviewModel import *
 
 SRC_PATH = path.dirname(path.abspath(__file__))
 DATA_PATH = path.join(SRC_PATH, '..', 'data')
@@ -190,6 +191,18 @@ if __name__ == "__main__":
             predictTestYearbookFromModel(trained_model, args.model_architecture, args.sample)
         else:
             print(get_time_string() + "Unknown type '%s'", args.type)
+    elif args.dataset_type == 'geolocation':
+        model = StreetViewModel()
+        trained_model = model.getModel(model_architecture=args.model_architecture,
+                                       load_saved_model=args.load_saved_model,
+                                       model_save_path=CHECKPOINT_BASE_DIR + args.checkpoint_file_name,
+                                       use_pretraining=args.use_pretraining,
+                                       pretrained_weights_path=pretrained_weights_path_map[args.model_architecture],
+                                       train_dir=None, val_dir=None, fine_tuning_method=args.fine_tuning_method,
+                                       batch_size=args.batch_size, num_epochs=args.num_epochs,
+                                       optimizer=args.optimizer, loss=args.loss,
+                                       initial_epoch=args.initial_epoch,
+                                       sample=args.sample)
     else:
-        print(get_time_string() + "only yearbook data supported in customgrade for now!")
+        print(get_time_string() + "Enter yearbook/geolocation for dataset")
         exit(1)
