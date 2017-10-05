@@ -1,13 +1,8 @@
-# -*- coding: utf-8 -*-
-
-from keras.layers import Activation, Convolution2D
-from keras.layers import Dropout, Dense
-from keras.layers import Input
-from keras.layers import merge
-from keras.layers.convolutional import MaxPooling2D
-from keras.layers.convolutional import ZeroPadding2D
+from keras.layers import Input, merge, ZeroPadding2D
+from keras.layers.convolutional import Convolution2D
+from keras.layers.core import Dense, Dropout, Activation
 from keras.layers.normalization import BatchNormalization
-from keras.layers.pooling import AveragePooling2D, GlobalAveragePooling2D
+from keras.layers.pooling import AveragePooling2D, GlobalAveragePooling2D, MaxPooling2D
 from keras.models import Model
 from keras.optimizers import SGD
 
@@ -15,21 +10,17 @@ from customlayers import Scale
 from util import *
 
 
-def densenet169_model(img_rows, img_cols, channels=1, nb_dense_block=4, growth_rate=32,
-                      nb_filter=64, reduction=0.5, dropout_rate=0.0, weight_decay=1e-4,
-                      num_classes=None, use_pretraining=True,
-                      pretrained_weights_path=None, optimizer=None, loss=None,
+def densenet121_model(img_rows, img_cols, channels=1, nb_dense_block=4, growth_rate=32, nb_filter=64,
+                      reduction=0.5, dropout_rate=0.0, weight_decay=1e-4, num_classes=None,
+                      use_pretraining=True, pretrained_weights_path=None, optimizer=None, loss=None,
                       fine_tuning_method=END_TO_END_FINE_TUNING):
     '''
-    DenseNet 169 Model for Keras
-
+    DenseNet 121 Model for Keras
     Model Schema is based on
     https://github.com/flyyufelix/DenseNet-Keras
-
     ImageNet Pretrained Weights
-    Theano: https://drive.google.com/open?id=0Byy2AcGyEVxfN0d3T1F1MXg0NlU
-    TensorFlow: https://drive.google.com/open?id=0Byy2AcGyEVxfSEc5UC1ROUFJdmM
-
+    Theano: https://drive.google.com/open?id=0Byy2AcGyEVxfMlRYb3YzV210VzQ
+    TensorFlow: https://drive.google.com/open?id=0Byy2AcGyEVxfSTA4SHJVOHNuTXc
     # Arguments
         nb_dense_block: number of dense blocks to add to end
         growth_rate: number of filters to add per dense block
@@ -58,7 +49,7 @@ def densenet169_model(img_rows, img_cols, channels=1, nb_dense_block=4, growth_r
 
     # From architecture for ImageNet (Table 1 in the paper)
     nb_filter = 64
-    nb_layers = [6,12,32,32] # For DenseNet-169
+    nb_layers = [6,12,24,16] # For DenseNet-121
 
     # Initial convolution
     x = ZeroPadding2D((3, 3), name='conv1_zeropadding')(img_input)
@@ -93,10 +84,10 @@ def densenet169_model(img_rows, img_cols, channels=1, nb_dense_block=4, growth_r
 
     # if K.image_dim_ordering() == 'th':
     #   # Use pre-trained weights for Theano backend
-    #   weights_path = 'imagenet_models/densenet169_weights_th.h5'
+    #   weights_path = 'imagenet_models/densenet121_weights_th.h5'
     # else:
     #   # Use pre-trained weights for Tensorflow backend
-    #   weights_path = 'imagenet_models/densenet169_weights_tf.h5'
+    #   weights_path = 'imagenet_models/densenet121_weights_tf.h5'
 
     if pretrained_weights_path is not None:
         model.load_weights(pretrained_weights_path, by_name=True)
