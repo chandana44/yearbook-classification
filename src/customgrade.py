@@ -24,6 +24,7 @@ STREETVIEW_TEST_LABEL_PATH = path.join(SRC_PATH, '..', 'output', 'geo_test_label
 CHECKPOINT_BASE_DIR = '../checkpoint/'
 ALEXNET_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/alexnet_weights.h5'
 VGG16_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/vgg16_weights_th_dim_ordering_th_kernels.h5'
+VGG19_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/vgg19_weights_th_dim_ordering_th_kernels.h5'
 RESNET152_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/resnet152_weights.h5'
 RESNET50_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/resnet50_weights.h5'
 DENSENET169_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/densenet169_weights_th.h5'
@@ -31,6 +32,7 @@ KAGGLE_PRETRAINED_WEIGHT_PATH = ''
 
 pretrained_weights_path_map = {ALEXNET_ARCHITECTURE: ALEXNET_PRETRAINED_WEIGHT_PATH,
                                VGG16_ARCHITECTURE: VGG16_PRETRAINED_WEIGHT_PATH,
+                               VGG19_ARCHITECTURE: VGG19_PRETRAINED_WEIGHT_PATH,
                                RESNET152_ARCHITECTURE: RESNET152_PRETRAINED_WEIGHT_PATH,
                                RESNET50_ARCHITECTURE: RESNET50_PRETRAINED_WEIGHT_PATH,
                                DENSENET169_ARCHITECTURE: DENSENET169_PRETRAINED_WEIGHT_PATH,
