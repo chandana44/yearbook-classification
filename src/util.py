@@ -432,7 +432,7 @@ def evaluateStreetviewFromModel(model, architecture, sample=False):
         predictions = model.predict(x_chunk)
         latslongs = np.array([[p[0], p[1]] for p in predictions])
         for i in range(0, len(y_chunk)):
-            l1_dist += dist(latslongs[0], latslongs[1], y_chunk[i][0], y_chunk[i][1])
+            l1_dist += dist(latslongs[i][0], latslongs[i][1], y_chunk[i][0], y_chunk[i][1])
         count += batch_size
 
     l1_dist /= total_count
