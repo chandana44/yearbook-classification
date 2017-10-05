@@ -22,6 +22,7 @@ YEARBOOK_VALID_PATH = path.join(YEARBOOK_PATH, 'valid')
 
 STREETVIEW_PATH = path.join(DATA_PATH, "geo")
 STREETVIEW_TXT_PREFIX = path.join(STREETVIEW_PATH, "geo")
+STREETVIEW_TXT_SAMPLE_PREFIX = path.join(YEARBOOK_PATH, "geo_sample")
 
 STREETVIEW_TRAIN_PATH = path.join(STREETVIEW_PATH, 'train')
 STREETVIEW_VALID_PATH = path.join(STREETVIEW_PATH, 'valid')
@@ -117,10 +118,13 @@ def listYearbook(train=True, valid=True, sample=False):
 
 
 # List all the streetview files
-def listStreetView(train=True, valid=True):
+def listStreetView(train=True, valid=True, sample=False):
     r = []
-    if train: r += [n.strip().split('\t') for n in open(STREETVIEW_TXT_PREFIX + '_train.txt', 'r')]
-    if valid: r += [n.strip().split('\t') for n in open(STREETVIEW_TXT_PREFIX + '_valid.txt', 'r')]
+    prefix = STREETVIEW_TXT_PREFIX
+    if sample:
+        prefix = STREETVIEW_TXT_SAMPLE_PREFIX
+    if train: r += [n.strip().split('\t') for n in open(prefix + '_train.txt', 'r')]
+    if valid: r += [n.strip().split('\t') for n in open(prefix + '_valid.txt', 'r')]
     return r
 
 
@@ -136,7 +140,10 @@ def testListYearbook(sample=False):
 
 def testListStreetView():
     r = []
-    r += [n.strip().split('\t') for n in open(STREETVIEW_TXT_PREFIX + '_test.txt', 'r')]
+    prefix = YEARBOOK_TXT_PREFIX
+    if sample:
+        prefix = YEARBOOK_TXT_SAMPLE_PREFIX
+    r += [n.strip().split('\t') for n in open(prefix + '_test.txt', 'r')]
     return r
 
 
@@ -408,9 +415,9 @@ def evaluateYearbookFromEnsembledModels(models_architectures_tuples, sample=Fals
           str(l1_dist_mean) + ', ' + str(l1_dist_median) + ', ' + str(l1_dist_closest_to_mean) + ']')
 
 # Evaluate L1 distance on valid data for geolocation dataset
-def evaluateStreetviewFromModel(model, architecture):
+def evaluateStreetviewFromModel(model, architecture, sample=False):
 
-    valid_data = listStreetView(False, True)
+    valid_data = listStreetView(False, True, sample)
     valid_images = [path.join(STREETVIEW_VALID_PATH, item[0]) for item in valid_data]
     valid_gps = [[item[1], item[2]] for item in valid_data]
 
