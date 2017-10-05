@@ -12,7 +12,6 @@ from vgg16 import vgg16_model
 from vgg19 import vgg19_model
 import customlayers
 
-
 class YearbookModel:
     get_model_function = {}
 
@@ -371,7 +370,7 @@ class YearbookModel:
             if model_save_path is None:
                 raise Exception('Unable to load trained model as model_save_path is None!')
             print(get_time_string() + 'Loading saved model from ' + model_save_path + '..')
-            model = load_model(model_save_path)
+            model = load_model(model_save_path, custom_objects={'Scale': customlayers.Scale})
         else:
             model = resnet152_model(img_rows, img_cols, channels, NUM_CLASSES, use_pretraining, pretrained_weights_path,
                                     fine_tuning_method, optimizer, loss)
