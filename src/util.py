@@ -22,7 +22,7 @@ YEARBOOK_VALID_PATH = path.join(YEARBOOK_PATH, 'valid')
 
 STREETVIEW_PATH = path.join(DATA_PATH, "geo")
 STREETVIEW_TXT_PREFIX = path.join(STREETVIEW_PATH, "geo")
-STREETVIEW_TXT_SAMPLE_PREFIX = path.join(YEARBOOK_PATH, "geo_sample")
+STREETVIEW_TXT_SAMPLE_PREFIX = path.join(STREETVIEW_PATH, "geo_sample")
 
 STREETVIEW_TRAIN_PATH = path.join(STREETVIEW_PATH, 'train')
 STREETVIEW_VALID_PATH = path.join(STREETVIEW_PATH, 'valid')
@@ -146,7 +146,7 @@ def testListYearbook(sample=False):
     return r
 
 
-def testListStreetView():
+def testListStreetView(sample=False):
     r = []
     prefix = YEARBOOK_TXT_PREFIX
     if sample:
@@ -427,7 +427,7 @@ def evaluateStreetviewFromModel(model, architecture, sample=False):
 
     valid_data = listStreetView(False, True, sample)
     valid_images = [path.join(STREETVIEW_VALID_PATH, item[0]) for item in valid_data]
-    valid_gps = [[item[1], item[2]] for item in valid_data]
+    valid_gps = [[float(item[1]), float(item[2])] for item in valid_data]
 
     total_count = len(valid_data)
     l1_dist = 0.0
@@ -440,7 +440,7 @@ def evaluateStreetviewFromModel(model, architecture, sample=False):
         predictions = model.predict(x_chunk)
         latslongs = np.array([[p[0], p[1]] for p in predictions])
         for i in range(0, len(y_chunk)):
-            l1_dist += dist(latslongs[0], latslongs[1], float(y_chunk[0]), float(y_chunk[1]))
+            l1_dist += dist(latslongs[i][0], latslongs[i][1], y_chunk[i][0], y_chunk[i][1])
         count += batch_size
 
     l1_dist /= total_count
