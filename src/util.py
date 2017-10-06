@@ -224,7 +224,7 @@ def get_streetview_data_and_labels(data, base_path):
     """
 
     images = [path.join(base_path, item[0]) for item in data]
-    gps = [[item[1], item[2]] for item in data]
+    gps = [[float(item[1]), float(item[2])] for item in data]
 
     return images, np.array(gps)
 
@@ -478,3 +478,51 @@ def dist(lat1, lon1, lat2, lon2):
 
 def print_line():
     print('-' * 100)
+
+
+def dist_between_points(x1, y1, x2, y2):
+    return sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
+
+
+def adhoc_testing_geo():
+    # get train and validation data
+    train_data = listStreetView(True, False, False)
+
+    train_images, train_gps = get_streetview_data_and_labels(train_data, STREETVIEW_TRAIN_PATH)
+
+    train_xy = coordinateToXY(train_gps)
+    print(train_xy.shape)
+    print(np.min(train_xy[:, 0], axis=0), np.max(train_xy[:, 0], axis=0))
+    print(np.min(train_xy[:, 1], axis=0), np.max(train_xy[:, 1], axis=0))
+    print(np.min(train_xy, axis=0), np.max(train_xy, axis=0))
+
+    print(train_xy[1:5, :])
+    print(train_gps[1:5, :])
+
+    lat1 = train_gps[1, 0]
+    lon1 = train_gps[1, 1]
+    lat2 = train_gps[2, 0]
+    lon2 = train_gps[2, 1]
+
+    x1 = train_xy[1, 0]
+    y1 = train_xy[1, 1]
+    x2 = train_xy[2, 0]
+    y2 = train_xy[2, 1]
+
+    print(dist(lat1, lon1, lat2, lon2))
+    print(dist_between_points(x1, y1, x2, y2))
+
+    minx = np.min(train_xy[:, 0], axis=0)
+    maxx = np.max(train_xy[:, 0], axis=0)
+    miny = np.min(train_xy[:, 1], axis=0)
+    maxy = np.max(train_xy[:, 1], axis=0)
+
+    minlat = np.min(train_gps[:, 0], axis=0)
+    maxlat = np.max(train_gps[:, 0], axis=0)
+    minlon = np.min(train_gps[:, 1], axis=0)
+    maxlon = np.max(train_gps[:, 1], axis=0)
+
+    print(dist(minlat, minlon, maxlat, maxlon))
+    print(dist_between_points(minx, miny, maxx, maxy))
+
+    drawOnMap(train_gps)
