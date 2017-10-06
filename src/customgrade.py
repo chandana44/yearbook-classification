@@ -113,7 +113,7 @@ def predictTestGeoLocationFromModel(model, architecture, checkpoint_file, width,
         batch_len = len(x_chunk)
         predictions = model.predict(x_chunk)
 
-        if architecture in [ALEXNET_ARCHITECTURE]: # Classification nets
+        if architecture in [ALEXNET_ARCHITECTURE, KERAS_RESNET50_ARCHITECTURE]: # Classification nets
             int_labels = np.array([np.argmax(p) for p in predictions])
             xy_coordinates = np.zeros((batch_len, 2))
             for i in range(batch_len):
@@ -295,7 +295,7 @@ if __name__ == "__main__":
                                        sample=args.sample, width=args.width,
                                        height=args.height)
         if args.type == 'valid':
-            if args.model_architecture in [ALEXNET_ARCHITECTURE]: # Classification nets
+            if args.model_architecture in [ALEXNET_ARCHITECTURE, KERAS_RESNET50_ARCHITECTURE]: # Classification nets
                 evaluateStreetviewFromModelClassification(trained_model, args.model_architecture, width=args.widgth,
                                                           height=args.height, sample=args.sample)
             else: # Regression nets
