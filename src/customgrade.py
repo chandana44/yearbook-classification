@@ -292,7 +292,7 @@ if __name__ == "__main__":
                                        batch_size=args.batch_size, num_epochs=args.num_epochs,
                                        optimizer=args.optimizer, loss=args.loss,
                                        initial_epoch=args.initial_epoch,
-                                       sample=args.sample, width=args.widgth,
+                                       sample=args.sample, width=args.width,
                                        height=args.height)
         if args.type == 'valid':
             if args.model_architecture in [ALEXNET_ARCHITECTURE]: # Classification nets
