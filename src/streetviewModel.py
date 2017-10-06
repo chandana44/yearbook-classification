@@ -1,7 +1,7 @@
 from util import *
 from kagglenet import *
 from keras.models import load_model
-from alexnet import alexnet_model
+from alexnetgeo import alexnet_model
 
 class StreetViewModel:
     get_model_function = {}
