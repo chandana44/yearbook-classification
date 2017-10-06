@@ -260,8 +260,11 @@ class StreetViewModel:
         if load_saved_model:
             if model_save_path is None:
                 raise Exception('Unable to load trained model as model_save_path is None!')
-            print(get_time_string() + 'Loading saved model from ' + model_save_path + '..')
-            model = load_model(model_save_path)
+            print(get_time_string() + 'Loading saved model weights from ' + model_save_path + '..')
+            model = alexnet_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=num_classes,
+                                  use_pretraining=use_pretraining, pretrained_weights_path=pretrained_weights_path,
+                                  optimizer=optimizer, loss=loss, fine_tuning_method=fine_tuning_method,
+                                  weights_path=model_save_path)
         else:
             model = alexnet_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=num_classes,
                                   use_pretraining=use_pretraining,

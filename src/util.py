@@ -27,7 +27,7 @@ STREETVIEW_TXT_SAMPLE_PREFIX = path.join(STREETVIEW_PATH, "geo_sample")
 STREETVIEW_TRAIN_PATH = path.join(STREETVIEW_PATH, 'train')
 STREETVIEW_VALID_PATH = path.join(STREETVIEW_PATH, 'valid')
 
-NUM_CLASSES = 118
+NUM_CLASSES_YEARBOOK = 118
 
 yb_r = re.compile("(\d\d\d\d)_(.*)_(.*)_(.*)_(.*)")
 sv_r = re.compile("([+-]?\d*\.\d*)_([+-]?\d*\.\d*)_\d*_-004")
@@ -219,7 +219,7 @@ def get_data_and_labels(data, base_path):
 
     for item in data:
         # Creating a one-hot vector for the output year label
-        label_vec = np.zeros(NUM_CLASSES)
+        label_vec = np.zeros(NUM_CLASSES_YEARBOOK)
         label_vec[int(item[1]) - 1900] = 1
 
         labels.append(label_vec)
@@ -444,7 +444,7 @@ def evaluateYearbookFromEnsembledModels(models_architectures_tuples, sample=Fals
 
     # Matrix of predictions where each column corresponds to one architecture
     mat = np.zeros((total_count, len(models_architectures_tuples)))
-    mat2 = np.zeros((total_count, NUM_CLASSES, len(models_architectures_tuples)))
+    mat2 = np.zeros((total_count, NUM_CLASSES_YEARBOOK, len(models_architectures_tuples)))
     i = 0
 
     for (model, architecture) in models_architectures_tuples:

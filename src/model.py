@@ -121,20 +121,16 @@ class YearbookModel:
         img_rows, img_cols = 227, 227  # Resolution of inputs
         channels = 3
 
-        model = alexnet_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=NUM_CLASSES,
-                              use_pretraining=use_pretraining, pretrained_weights_path=pretrained_weights_path,
-                              optimizer=optimizer, loss=loss, fine_tuning_method=fine_tuning_method, )
-
         if load_saved_model:
             if model_save_path is None:
                 raise Exception('Unable to load trained model as model_save_path is None!')
             print(get_time_string() + 'Loading saved model weights from ' + model_save_path + '..')
-            model = alexnet_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=NUM_CLASSES,
+            model = alexnet_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=NUM_CLASSES_YEARBOOK,
                                   use_pretraining=use_pretraining, pretrained_weights_path=pretrained_weights_path,
                                   optimizer=optimizer, loss=loss, fine_tuning_method=fine_tuning_method,
                                   weights_path=model_save_path)
         else:
-            model = alexnet_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=NUM_CLASSES,
+            model = alexnet_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=NUM_CLASSES_YEARBOOK,
                                   use_pretraining=use_pretraining, pretrained_weights_path=pretrained_weights_path,
                                   optimizer=optimizer, loss=loss, fine_tuning_method=fine_tuning_method)
 
@@ -214,7 +210,7 @@ class YearbookModel:
             print(get_time_string() + 'Loading saved model from ' + model_save_path + '..')
             model = load_model(model_save_path)
         else:
-            model = vgg16_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=NUM_CLASSES,
+            model = vgg16_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=NUM_CLASSES_YEARBOOK,
                                 use_pretraining=use_pretraining, pretrained_weights_path=pretrained_weights_path,
                                 optimizer=optimizer, loss=loss, fine_tuning_method=fine_tuning_method)
 
@@ -300,7 +296,7 @@ class YearbookModel:
             print(get_time_string() + 'Loading saved model from ' + model_save_path + '..')
             model = load_model(model_save_path)
         else:
-            model = vgg19_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=NUM_CLASSES,
+            model = vgg19_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=NUM_CLASSES_YEARBOOK,
                                 use_pretraining=use_pretraining, pretrained_weights_path=pretrained_weights_path,
                                 optimizer=optimizer, loss=loss, fine_tuning_method=fine_tuning_method)
 
@@ -372,7 +368,7 @@ class YearbookModel:
             print(get_time_string() + 'Loading saved model from ' + model_save_path + '..')
             model = load_model(model_save_path, custom_objects={'Scale': customlayers.Scale})
         else:
-            model = resnet152_model(img_rows, img_cols, channels, NUM_CLASSES, use_pretraining, pretrained_weights_path,
+            model = resnet152_model(img_rows, img_cols, channels, NUM_CLASSES_YEARBOOK, use_pretraining, pretrained_weights_path,
                                     fine_tuning_method, optimizer, loss)
 
         if initial_epoch >= num_epochs:
@@ -441,7 +437,7 @@ class YearbookModel:
             print(get_time_string() + 'Loading saved model from ' + model_save_path + '..')
             model = load_model(model_save_path)
         else:
-            model = resnet50_model(img_rows, img_cols, channels, NUM_CLASSES, use_pretraining, pretrained_weights_path,
+            model = resnet50_model(img_rows, img_cols, channels, NUM_CLASSES_YEARBOOK, use_pretraining, pretrained_weights_path,
                                    fine_tuning_method, optimizer, loss)
 
         if initial_epoch >= num_epochs:
@@ -517,7 +513,7 @@ class YearbookModel:
             model = load_model(model_save_path, custom_objects={'Scale': customlayers.Scale})
         else:
             model = densenet169_model(img_rows=img_rows, img_cols=img_cols, channels=channels,
-                                      num_classes=NUM_CLASSES, use_pretraining=use_pretraining,
+                                      num_classes=NUM_CLASSES_YEARBOOK, use_pretraining=use_pretraining,
                                       pretrained_weights_path=pretrained_weights_path,
                                       optimizer=optimizer, loss=loss,
                                       fine_tuning_method=fine_tuning_method)
@@ -603,7 +599,7 @@ class YearbookModel:
             model = load_model(model_save_path, custom_objects={'Scale': customlayers.Scale})
         else:
             model = densenet161_model(img_rows=img_rows, img_cols=img_cols, channels=channels,
-                                      num_classes=NUM_CLASSES, use_pretraining=use_pretraining,
+                                      num_classes=NUM_CLASSES_YEARBOOK, use_pretraining=use_pretraining,
                                       pretrained_weights_path=pretrained_weights_path,
                                       optimizer=optimizer, loss=loss,
                                       fine_tuning_method=fine_tuning_method)
@@ -689,7 +685,7 @@ class YearbookModel:
             model = load_model(model_save_path, custom_objects={'Scale': customlayers.Scale})
         else:
             model = densenet121_model(img_rows=img_rows, img_cols=img_cols, channels=channels,
-                                      num_classes=NUM_CLASSES, use_pretraining=use_pretraining,
+                                      num_classes=NUM_CLASSES_YEARBOOK, use_pretraining=use_pretraining,
                                       pretrained_weights_path=pretrained_weights_path,
                                       optimizer=optimizer, loss=loss,
                                       fine_tuning_method=fine_tuning_method)
