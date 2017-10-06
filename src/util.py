@@ -450,7 +450,7 @@ def evaluateYearbookFromEnsembledModels(models_architectures_tuples, sample=Fals
             predictions = model.predict(x_chunk)
             years = np.array([np.argmax(p) + 1900 for p in predictions])
             years_full = np.concatenate((years_full, years), axis=0)
-            mat2[count: count + batch_len - 1, :, i] = predictions
+            mat2[count: count + batch_len, :, i] = predictions
             count += batch_len
         mat[:, i] = years_full
         i += 1
