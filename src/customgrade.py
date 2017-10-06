@@ -138,11 +138,19 @@ if __name__ == "__main__":
                         required=False, default=0, type=int)
 
     parser.add_argument("--ensemble", dest="ensemble",
-                        help="ensemble: whether to use multiple saved models to calculate scores on validation/test data",
+                        help="ensemble: whether to use multiple saved models to calculate scores on validation/test "
+                             "data",
                         required=False, default=0, type=int)
     parser.add_argument("--ensemble_models", dest="ensemble_models",
                         help="ensemble_models: alexnet:checkpoint1.h5,vgg16:checkpoint2.h5 etc",
                         required=False, default=None)
+
+    parser.add_argument("--width", dest="width",
+                        help="width: number of classes to partition the x-coordinate",
+                        required=False, default=20, type=int)
+    parser.add_argument("--height", dest="height",
+                        help="height: number of classes to partition the y-coordinate",
+                        required=False, default=20, type=int)
 
     args = parser.parse_args()
     print('Args provided: ' + str(args))

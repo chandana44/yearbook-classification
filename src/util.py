@@ -7,7 +7,7 @@ from scipy.misc import imread
 from scipy.misc import imresize
 from theano import function, config, shared, tensor
 from keras import backend as K
-from math import sin, cos, atan2, sqrt, pi
+from math import sin, cos, atan2, sqrt, pi, ceil, floor
 
 # If you want this to work do not move this file
 SRC_PATH = path.dirname(path.abspath(__file__))
@@ -234,6 +234,49 @@ def get_streetview_data_and_labels(data, base_path):
     return images, np.array(gps)
 
 
+def get_streetview_data_and_labels_one_hot(data, base_path, width, height):
+    """
+    :param data: list of tuples of images name, lats and longs
+    :param base_path: base path where the images are present
+    :return: Returns list of full image path names and list of lats and longs
+
+    """
+
+    N = len(data)
+    images = [path.join(base_path, item[0]) for item in data]
+    labels = []
+
+    num_classes = width * height
+    min_x, max_x, min_y, max_y = get_min_max_xy_geo()
+
+    coordinates = np.zeros((N, 2))
+    for i in range(N):
+        item = data[i]
+        coordinates[i, 0] = item[1]
+        coordinates[i, 1] = item[2]
+
+    xy_coordinates = coordinateToXY(coordinates)
+
+    # label_dict = {}
+    # for i in range(num_classes):
+    #     label_dict[i] = 0
+
+    for item in xy_coordinates:
+        # Creating a one-hot vector for the output year label
+        label_vec = np.zeros(num_classes)
+        int_label = get_int_label_from_xy(width, height, item[0], item[1], min_x, max_x, min_y, max_y)
+        # label_dict[int_label] += 1
+        label_vec[int(int_label)] = 1
+        labels.append(label_vec)
+
+    # print label_dict
+
+    # for key, value in sorted(label_dict.iteritems(), key=lambda (k, v): (v, k)):
+    #     print "%s: %s" % (key, value)
+
+    return images, np.array(labels)
+
+
 def preprocess_image_batch(image_paths, architecture, out=None):
     """
     Consistent pre-processing of images batches
@@ -456,6 +499,42 @@ def evaluateStreetviewFromModel(model, architecture, sample=False):
     return l1_dist
 
 
+# Evaluate L1 distance on valid data for geolocation dataset
+def evaluateStreetviewFromModelClassification(model, architecture, width, height, sample=False):
+    min_x, max_x, min_y, max_y = get_min_max_xy_geo()
+
+    valid_data = listStreetView(False, True, sample)
+    valid_images = [path.join(STREETVIEW_VALID_PATH, item[0]) for item in valid_data]
+    valid_gps = [[float(item[1]), float(item[2])] for item in valid_data]
+
+    total_count = len(valid_data)
+    l1_dist = 0.0
+    batch_size = 128
+    count = 0
+    print(get_time_string() + 'Total validation data: ' + str(total_count))
+
+    for x_chunk, y_chunk in chunks(valid_images, valid_gps, batch_size, architecture):
+        batch_len = len(x_chunk)
+        print(get_time_string() + 'validating ' + str(count + 1) + ' - ' + str(count + batch_size))
+        predictions = model.predict(x_chunk)
+        int_labels = np.array([np.argmax(p) for p in predictions])
+        xy_coordinates = np.zeros((batch_len, 2))
+        for i in range(batch_len):
+            int_label = int_labels[i]
+            x, y = get_xy_from_int_label(width, height, int_label, min_x, max_x, min_y, max_y)
+            xy_coordinates[i, 0] = x
+            xy_coordinates[i, 1] = y
+
+        coordinates = XYToCoordinate(xy_coordinates)
+        for i in range(batch_len):
+            l1_dist += dist(coordinates[i][0], coordinates[i][1], y_chunk[i][0], y_chunk[i][1])
+        count += batch_size
+
+    l1_dist /= total_count
+    print(get_time_string() + 'L1 distance for validation set: ' + str(l1_dist))
+    return l1_dist
+
+
 def numToRadians(x):
     return x / 180.0 * pi
 
@@ -487,6 +566,74 @@ def print_line():
 
 def dist_between_points(x1, y1, x2, y2):
     return sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
+
+
+def get_min_max_xy_geo():
+    # get train and validation data
+    train_data = listStreetView(True, False, False)
+
+    train_images, train_gps = get_streetview_data_and_labels(train_data, STREETVIEW_TRAIN_PATH)
+
+    train_xy = coordinateToXY(train_gps)
+
+    min_x = np.min(train_xy[:, 0], axis=0)
+    max_x = np.max(train_xy[:, 0], axis=0)
+    min_y = np.min(train_xy[:, 1], axis=0)
+    max_y = np.max(train_xy[:, 1], axis=0)
+
+    return min_x, max_x, min_y, max_y
+
+
+def get_int_label_from_xy(width, height, x, y, min_x, max_x, min_y, max_y):
+    """
+    :param width: number of segments in x-coordinate
+    :param height: number of segments in y-coordinate
+    :param x: x-coordinate of point
+    :param y: y-coordinate of point
+    :param min_x: min x-coordinate in training set
+    :param max_x: max x-coordinate in training set
+    :param min_y: min y-coordinate in training set
+    :param max_y: max y-coordinate in training set
+    :return: Returns a single label which maps the point (x, y) in the grid to an integer
+
+    For example, (min_x, min_y) will be mapped to 0 and (max_x, max_y) will be mapped to width * height - 1
+
+    """
+
+    x_size_per_segment = int(ceil(abs(max_x - min_x) / width))
+    y_size_per_segment = int(ceil(abs(max_y - min_y) / height))
+
+    col = int(floor(abs(x - min_x) / x_size_per_segment))
+    row = int(floor(abs(y - min_y) / y_size_per_segment))
+
+    return row * width + col
+
+
+def get_xy_from_int_label(width, height, int_label, min_x, max_x, min_y, max_y):
+    """
+    :param width: number of segments in x-coordinate
+    :param height: number of segments in y-coordinate
+    :param int_label: the classification label
+    :param min_x: min x-coordinate in training set
+    :param max_x: max x-coordinate in training set
+    :param min_y: min y-coordinate in training set
+    :param max_y: max y-coordinate in training set
+    :return: Returns a (x, y) coordinate belonging to the classification label
+
+    For example, (min_x, min_y) will be mapped to 0 and (max_x, max_y) will be mapped to width * height - 1
+
+    """
+
+    x_size_per_segment = int(ceil(abs(max_x - min_x) / width))
+    y_size_per_segment = int(ceil(abs(max_y - min_y) / height))
+
+    row = int(floor(int_label / width))
+    col = int(int_label % width)
+
+    x = col * x_size_per_segment + x_size_per_segment / 2.0
+    y = row * y_size_per_segment + y_size_per_segment / 2.0
+
+    return x, y
 
 
 def adhoc_testing_geo():
@@ -531,3 +678,12 @@ def adhoc_testing_geo():
     print(dist_between_points(minx, miny, maxx, maxy))
 
     drawOnMap(train_gps)
+
+# get train and validation data
+# train_data = listStreetView(True, False, False)
+#
+# train_images, train_gps = get_streetview_data_and_labels_one_hot(train_data, STREETVIEW_TRAIN_PATH, 20, 20)
+# print len(train_images)
+# print len(train_gps)
+#
+# print train_gps[0]
