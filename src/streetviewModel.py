@@ -46,7 +46,7 @@ class StreetViewModel:
         # get train and validation data
         train_data = listStreetView(True, False, sample)
 
-        if model_architecture == ALEXNET_ARCHITECTURE:
+        if model_architecture in CLASSIFICATION_MODELS:
             train_images, train_gps = get_streetview_data_and_labels_one_hot(train_data, STREETVIEW_TRAIN_PATH, width, height)
         else:
             train_images, train_gps = get_streetview_data_and_labels(train_data, STREETVIEW_TRAIN_PATH)
