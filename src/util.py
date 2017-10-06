@@ -505,12 +505,12 @@ def _get_l1_distance_argmin(s, valid_years):
 def calculate_argmax_over_metrics(mat, total_count, valid_years):
     print(get_time_string() + 'Calculating argmax over metrics..')
 
-    l1_sum = _get_l1_distance_argmax(np.sum(mat, axis=2), valid_years) / total_count
-    l1_mean = _get_l1_distance_argmax(np.mean(mat, axis=2), valid_years) / total_count
-    l1_median = _get_l1_distance_argmax(np.median(mat, axis=2), valid_years) / total_count
-    l1_max = _get_l1_distance_argmax(np.max(mat, axis=2), valid_years) / total_count
+    l1_sum = _get_l1_distance_argmax(np.sum(mat, axis=2), valid_years) / float(total_count)
+    l1_mean = _get_l1_distance_argmax(np.mean(mat, axis=2), valid_years) / float(total_count)
+    l1_median = _get_l1_distance_argmax(np.median(mat, axis=2), valid_years) / float(total_count)
+    l1_max = _get_l1_distance_argmax(np.max(mat, axis=2), valid_years) / float(total_count)
 
-    l1_std = _get_l1_distance_argmin(np.std(mat, axis=2), valid_years) / total_count
+    l1_std = _get_l1_distance_argmin(np.std(mat, axis=2), valid_years) / float(total_count)
 
     print(get_time_string() + 'L1 distance for validation set: [sum, mean, median, std, max] = [' +
           str(l1_sum) + ', ' + str(l1_mean) + ', ' + str(l1_median) + ', ' + str(l1_std) + ', ' + str(l1_max) + ']')
