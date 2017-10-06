@@ -44,21 +44,94 @@ pretrained_weights_path_map = {ALEXNET_ARCHITECTURE: ALEXNET_PRETRAINED_WEIGHT_P
                                KAGGLE_ARCHITECTURE: KAGGLE_PRETRAINED_WEIGHT_PATH}
 
 
+def getYearbookTestOutputFile(checkpoint_file):
+    checkpoint_ext = '.h5'
+    checkpoint_file_wo_ext = checkpoint_file.split(checkpoint_ext)[0]
+
+    output_path = YEARBOOK_TEST_LABEL_PATH
+    ext = '.txt'
+    output_path_wo_ext = output_path.split(ext)[0]
+
+    return output_path_wo_ext + '-' + checkpoint_file_wo_ext + ext
+
+
+def getGeolocationTestOutputFile(checkpoint_file):
+    checkpoint_ext = '.h5'
+    checkpoint_file_wo_ext = checkpoint_file.split(checkpoint_ext)[0]
+
+    output_path = STREETVIEW_TEST_LABEL_PATH
+    ext = '.txt'
+    output_path_wo_ext = output_path.split(ext)[0]
+
+    return output_path_wo_ext + '-' + checkpoint_file_wo_ext + ext
+
+
 # Predict label for test data on yearbook dataset
-def predictTestYearbookFromModel(model, architecture, sample=False):
+def predictTestYearbookFromModel(model, architecture, checkpoint_file, sample=False):
+
     test_list = util.testListYearbook(sample=sample)
+    test_images = [path.join(YEARBOOK_TEST_PATH, item[0]) for item in test_list]
 
     total_count = len(test_list)
     print(get_time_string() + "Total test data: ", total_count)
 
-    test_images = [path.join(YEARBOOK_TEST_PATH, item[0]) for item in test_list]
-    processed_test_images = preprocess_image_batch(test_images, architecture)
+    batch_size = 128
+    count = 0
 
-    output = open(YEARBOOK_TEST_LABEL_PATH, 'w')
-    for image in processed_test_images:
-        pred_year = np.argmax(model.predict(np.stack([image], axis=0))) + 1900
-        out_string = str(pred_year) + '\n'
-        output.write(out_string)
+    output_file = getYearbookTestOutputFile(checkpoint_file)
+    output = open(output_file, 'w')
+    for x_chunk, image_name_chunk in chunks_test(test_images, test_list, batch_size, architecture):
+        print(get_time_string() + 'Testing ' + str(count + 1) + ' - ' + str(count + batch_size))
+        predictions = model.predict(x_chunk)
+        years = np.array([np.argmax(p) + 1900 for p in predictions])
+        i = 0
+        for pred_year in years:
+            out_string = image_name_chunk[i] + '\t' + str(pred_year) + '\n'
+            output.write(out_string)
+            i += 1
+        count += batch_size
+    output.close()
+
+
+# Predict label for test data on yearbook dataset
+def predictTestGeoLocationFromModel(model, architecture, checkpoint_file, width, height, sample=False):
+    min_x, max_x, min_y, max_y = get_min_max_xy_geo()
+
+    test_list = util.testListStreetView(sample=sample)
+    test_images = [path.join(YEARBOOK_TEST_PATH, item[0]) for item in test_list]
+
+    total_count = len(test_list)
+    print(get_time_string() + "Total test data: ", total_count)
+
+    batch_size = 128
+    count = 0
+
+    output_file = getGeolocationTestOutputFile(checkpoint_file)
+    output = open(output_file, 'w')
+    for x_chunk, image_name_chunk in chunks_test(test_images, test_list, batch_size, architecture):
+        print(get_time_string() + 'Testing ' + str(count + 1) + ' - ' + str(count + batch_size))
+        batch_len = len(x_chunk)
+        predictions = model.predict(x_chunk)
+
+        if architecture in [ALEXNET_ARCHITECTURE]: # Classification nets
+            int_labels = np.array([np.argmax(p) for p in predictions])
+            xy_coordinates = np.zeros((batch_len, 2))
+            for i in range(batch_len):
+                int_label = int_labels[i]
+                x, y = get_xy_from_int_label(width, height, int_label, min_x, max_x, min_y, max_y)
+                xy_coordinates[i, 0] = x
+                xy_coordinates[i, 1] = y
+            coordinates = XYToCoordinate(xy_coordinates)
+            for i in range(batch_len):
+                out_string = image_name_chunk[i] + '\t' + str(coordinates[i, 0]) + '\t' + str(coordinates[i, 1]) + '\n'
+                output.write(out_string)
+        else: # Regression nets
+            latslongs = np.array([[p[0], p[1]] for p in predictions])
+            for i in range(batch_len):
+                out_string = image_name_chunk[i] + '\t' + str(latslongs[i][0]) + '\t' + str(latslongs[i][1]) + '\n'
+                output.write(out_string)
+
+        count += batch_size
     output.close()
 
 
@@ -205,7 +278,7 @@ if __name__ == "__main__":
         if args.type == 'valid':
             evaluateYearbookFromModel(trained_model, args.model_architecture, args.sample)
         elif args.type == 'test':
-            predictTestYearbookFromModel(trained_model, args.model_architecture, args.sample)
+            predictTestYearbookFromModel(trained_model, args.model_architecture, args.checkpoint_file_name, args.sample)
         else:
             print(get_time_string() + "Unknown type '%s'", args.type)
     elif args.dataset_type == 'geolocation':
@@ -220,6 +293,17 @@ if __name__ == "__main__":
                                        optimizer=args.optimizer, loss=args.loss,
                                        initial_epoch=args.initial_epoch,
                                        sample=args.sample)
+        if args.type == 'valid':
+            if args.model_architecture in [ALEXNET_ARCHITECTURE]: # Classification nets
+                evaluateStreetviewFromModelClassification(trained_model, args.model_architecture, width=args.widgth,
+                                                          height=args.height, sample=args.sample)
+            else: # Regression nets
+                evaluateStreetviewFromModel(trained_model, args.model_architecture, args.sample)
+        elif args.type == 'test':
+            predictTestGeoLocationFromModel(trained_model, args.model_architecture, args.checkpoint_file_name,
+                                            args.widgth, args.height, args.sample)
+        else:
+            print(get_time_string() + "Unknown type '%s'", args.type)
     else:
         print(get_time_string() + "Enter yearbook/geolocation for dataset")
         exit(1)

@@ -394,6 +394,12 @@ def chunks(l, m, n, architecture):
         yield preprocess_image_batch(l[i:i + n], architecture), m[i: i + n]
 
 
+def chunks_test(l, m, n, architecture):
+    """Yield successive n-sized chunks from l and m."""
+    for i in range(0, len(l), n):
+        yield preprocess_image_batch(l[i:i + n], architecture), m[i: i + n]
+
+
 # Evaluate L1 distance on valid data for yearbook dataset
 def evaluateYearbookFromModel(model, architecture, sample=False):
     valid_data = listYearbook(False, True, sample)
