@@ -13,9 +13,9 @@ from util import *
 from keras.optimizers import SGD
 
 
-def alexnet_model(img_rows, img_cols, channels=1, num_classes=None, use_pretraining=True,
-                  pretrained_weights_path=None, fine_tuning_method=END_TO_END_FINE_TUNING, optimizer=None, loss=None,
-                  weights_path=None):
+def alexnet_regression_model(img_rows, img_cols, channels=1, num_classes=None, use_pretraining=True,
+                             pretrained_weights_path=None, fine_tuning_method=END_TO_END_FINE_TUNING, optimizer=None, loss=None,
+                             weights_path=None):
     inputs = Input(shape=(channels, img_rows, img_cols))
     conv_1 = Convolution2D(96, 11, 11, subsample=(4, 4), activation='relu',
                            name='conv_1')(inputs)

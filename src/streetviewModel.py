@@ -1,14 +1,15 @@
-from util import *
-from kagglenet import *
 from keras.models import load_model
-from alexnetgeo import alexnet_model
+
+from alexnetgeo import alexnet_regression_model
+from kagglenet import *
+
 
 class StreetViewModel:
     get_model_function = {}
 
     def __init__(self):
         self.get_model_function[KAGGLE_ARCHITECTURE] = self.getKaggleModel
-        self.get_model_function[ALEXNET_ARCHITECTURE] = self.getAlexNetModel
+        self.get_model_function[ALEXNET_REGRESSION_ARCHITECTURE] = self.getAlexNetRegressionModel()
 
     def getModel(self, model_architecture='kaggle', load_saved_model=False, model_save_path=None,
                  use_pretraining=False,
@@ -136,10 +137,9 @@ class StreetViewModel:
         filepath = path_wo_ext + '-' + str(epoch) + ext
         return filepath
 
-
-    def getAlexNetModel(self, train_images, train_gps, load_saved_model,
-                       model_save_path, use_pretraining, pretrained_weights_path,
-                       fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample):
+    def getAlexNetRegressionModel(self, train_images, train_gps, load_saved_model,
+                        model_save_path, use_pretraining, pretrained_weights_path,
+                        fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample):
         """
 
         :param load_saved_model: boolean (whether to just load the model from weights path)
@@ -158,7 +158,6 @@ class StreetViewModel:
 
         """
 
-
         print(get_time_string() + 'Creating Alexnet model..')
 
         img_rows, img_cols = 227, 227  # Resolution of inputs
@@ -170,9 +169,10 @@ class StreetViewModel:
             print(get_time_string() + 'Loading saved model from ' + model_save_path + '..')
             model = load_model(model_save_path)
         else:
-            model = alexnet_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=2,
-                                   use_pretraining=use_pretraining, pretrained_weights_path=pretrained_weights_path,
-                                   optimizer=optimizer, loss=loss, fine_tuning_method=fine_tuning_method)
+            model = alexnet_regression_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=2,
+                                             use_pretraining=use_pretraining,
+                                             pretrained_weights_path=pretrained_weights_path,
+                                             optimizer=optimizer, loss=loss, fine_tuning_method=fine_tuning_method)
 
         if initial_epoch >= num_epochs:
             print(get_time_string() + 'Not fitting the model since initial_epoch is >= num_epochs. Returning model..')

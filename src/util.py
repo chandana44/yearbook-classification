@@ -34,6 +34,7 @@ sv_r = re.compile("([+-]?\d*\.\d*)_([+-]?\d*\.\d*)_\d*_-004")
 
 # architectures
 ALEXNET_ARCHITECTURE = 'alexnet'
+ALEXNET_REGRESSION_ARCHITECTURE = 'alexnet-regression'
 VGG16_ARCHITECTURE = 'vgg16'
 VGG19_ARCHITECTURE = 'vgg19'
 RESNET152_ARCHITECTURE = 'resnet152'
@@ -44,6 +45,7 @@ DENSENET161_ARCHITECTURE = 'densenet161'
 KAGGLE_ARCHITECTURE = 'kaggle'
 
 ARCHITECTURES = [ALEXNET_ARCHITECTURE,
+                 ALEXNET_REGRESSION_ARCHITECTURE,
                  VGG16_ARCHITECTURE,
                  VGG19_ARCHITECTURE,
                  RESNET152_ARCHITECTURE,
@@ -55,6 +57,7 @@ ARCHITECTURES = [ALEXNET_ARCHITECTURE,
 
 # dictionary for arcitectures-image sizes
 image_sizes = {ALEXNET_ARCHITECTURE: (256, 256),
+               ALEXNET_REGRESSION_ARCHITECTURE: (256, 256),
                VGG16_ARCHITECTURE: (224, 224),
                VGG19_ARCHITECTURE: (224, 224),
                RESNET152_ARCHITECTURE: (256, 256),
@@ -65,6 +68,7 @@ image_sizes = {ALEXNET_ARCHITECTURE: (256, 256),
                KAGGLE_ARCHITECTURE: (224, 224)}
 
 crop_sizes = {ALEXNET_ARCHITECTURE: (227, 227),
+              ALEXNET_REGRESSION_ARCHITECTURE: (227, 227),
               VGG16_ARCHITECTURE: None,
               VGG19_ARCHITECTURE: None,
               RESNET152_ARCHITECTURE: (224, 224),
@@ -75,6 +79,7 @@ crop_sizes = {ALEXNET_ARCHITECTURE: (227, 227),
               KAGGLE_ARCHITECTURE: None}
 
 color_modes = {ALEXNET_ARCHITECTURE: "rgb",
+               ALEXNET_REGRESSION_ARCHITECTURE: "rgb",
                VGG16_ARCHITECTURE: "rgb",
                VGG19_ARCHITECTURE: "rgb",
                RESNET152_ARCHITECTURE: "rgb",
