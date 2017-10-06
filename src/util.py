@@ -413,7 +413,7 @@ def evaluateYearbookFromModel(model, architecture, sample=False):
     print(get_time_string() + 'Total validation data: ' + str(total_count))
 
     for x_chunk, y_chunk in chunks(valid_images, valid_years, batch_size, architecture):
-        print get_time_string() + 'validating ' + str(count + 1) + ' - ' + str(count + batch_size)
+        print(get_time_string() + 'Validating ' + str(count + 1) + ' - ' + str(count + batch_size))
         predictions = model.predict(x_chunk)
         years = np.array([np.argmax(p) + 1900 for p in predictions])
         l1_dist += np.sum(abs(years - y_chunk))
@@ -437,6 +437,7 @@ def evaluateYearbookFromEnsembledModels(models_architectures_tuples, sample=Fals
 
     # Matrix of predictions where each column corresponds to one architecture
     mat = np.zeros((total_count, len(models_architectures_tuples)))
+    mat2 = np.zeros((total_count, NUM_CLASSES, len(models_architectures_tuples)))
     i = 0
 
     for (model, architecture) in models_architectures_tuples:
@@ -444,13 +445,22 @@ def evaluateYearbookFromEnsembledModels(models_architectures_tuples, sample=Fals
         print(get_time_string() + 'Starting validation for architecture ' + architecture)
         years_full = np.empty(0)  # Contains predictions for the entire validation set
         for x_chunk, y_chunk in chunks(valid_images, valid_years, batch_size, architecture):
+            batch_len = len(x_chunk)
             print(get_time_string() + 'Validating ' + str(count + 1) + ' - ' + str(count + batch_size))
             predictions = model.predict(x_chunk)
             years = np.array([np.argmax(p) + 1900 for p in predictions])
             years_full = np.concatenate((years_full, years), axis=0)
-            count += batch_size
+            mat2[count: count + batch_len - 1, :, i] = predictions
+            count += batch_len
         mat[:, i] = years_full
         i += 1
+
+    calculate_metrics_over_argmax(mat, total_count, valid_years)
+    calculate_argmax_over_metrics(mat2, total_count, np.array(valid_years))
+
+
+def calculate_metrics_over_argmax(mat, total_count, valid_years):
+    print(get_time_string() + 'Calculating metrics over argmax..')
 
     l1_dist_mean = 0.0
     l1_dist_median = 0.0
@@ -468,8 +478,8 @@ def evaluateYearbookFromEnsembledModels(models_architectures_tuples, sample=Fals
                 mx = abs(x - mean)
                 closest_to_mean = x
 
-        l1_dist_mean += abs(mean - valid_years[i])
-        l1_dist_median += abs(median - valid_years[i])
+        l1_dist_mean += abs(int(round(mean)) - valid_years[i])
+        l1_dist_median += abs(int(round(median)) - valid_years[i])
         l1_dist_closest_to_mean += abs(closest_to_mean - valid_years[i])
 
     l1_dist_mean /= total_count
@@ -478,6 +488,32 @@ def evaluateYearbookFromEnsembledModels(models_architectures_tuples, sample=Fals
 
     print(get_time_string() + 'L1 distance for validation set: [mean, median, closest to mean] = [' +
           str(l1_dist_mean) + ', ' + str(l1_dist_median) + ', ' + str(l1_dist_closest_to_mean) + ']')
+
+
+def _get_l1_distance_argmax(s, valid_years):
+    predicted_indices = np.argmax(s, axis=1)
+    predicted_years = np.array([e + 1900 for e in predicted_indices])
+    return np.sum(abs(predicted_years - valid_years))
+
+
+def _get_l1_distance_argmin(s, valid_years):
+    predicted_indices = np.argmin(s, axis=1)
+    predicted_years = np.array([e + 1900 for e in predicted_indices])
+    return np.sum(abs(predicted_years - valid_years))
+
+
+def calculate_argmax_over_metrics(mat, total_count, valid_years):
+    print(get_time_string() + 'Calculating argmax over metrics..')
+
+    l1_sum = _get_l1_distance_argmax(np.sum(mat, axis=2), valid_years) / total_count
+    l1_mean = _get_l1_distance_argmax(np.mean(mat, axis=2), valid_years) / total_count
+    l1_median = _get_l1_distance_argmax(np.median(mat, axis=2), valid_years) / total_count
+    l1_max = _get_l1_distance_argmax(np.max(mat, axis=2), valid_years) / total_count
+
+    l1_std = _get_l1_distance_argmin(np.std(mat, axis=2), valid_years) / total_count
+
+    print(get_time_string() + 'L1 distance for validation set: [sum, mean, median, std, max] = [' +
+          str(l1_sum) + ', ' + str(l1_mean) + ', ' + str(l1_median) + ', ' + str(l1_std) + ', ' + str(l1_max) + ']')
 
 
 # Evaluate L1 distance on valid data for geolocation dataset
