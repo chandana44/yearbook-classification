@@ -205,6 +205,9 @@ if __name__ == "__main__":
     parser.add_argument("--optimizer", dest="optimizer",
                         help="optimizer to use: sgd|adagrad",
                         required=False, default='sgd')
+    parser.add_argument("--lr", dest="lr",
+                        help="learning rate: 0.001",
+                        required=False, default=None, type=float)
 
     parser.add_argument("--sample", dest="sample",
                         help="sample: whether to use sample dataset",
@@ -274,7 +277,7 @@ if __name__ == "__main__":
                                        batch_size=args.batch_size, num_epochs=args.num_epochs,
                                        optimizer=args.optimizer, loss=args.loss,
                                        initial_epoch=args.initial_epoch,
-                                       sample=args.sample)
+                                       sample=args.sample, lr=args.lr)
         if args.type == 'valid':
             evaluateYearbookFromModel(trained_model, args.model_architecture, args.sample)
         elif args.type == 'test':
@@ -293,7 +296,7 @@ if __name__ == "__main__":
                                        optimizer=args.optimizer, loss=args.loss,
                                        initial_epoch=args.initial_epoch,
                                        sample=args.sample, width=args.width,
-                                       height=args.height)
+                                       height=args.height, lr=args.lr)
         if args.type == 'valid':
             if args.model_architecture in CLASSIFICATION_MODELS: # Classification nets
                 evaluateStreetviewFromModelClassification(trained_model, args.model_architecture, width=args.width,

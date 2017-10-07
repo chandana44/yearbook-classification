@@ -53,7 +53,7 @@ class YearbookModel:
     def getModel(self, model_architecture='alexnet', load_saved_model=False, model_save_path=None,
                  use_pretraining=False,
                  pretrained_weights_path=None, train_dir=None, val_dir=None, fine_tuning_method=END_TO_END_FINE_TUNING,
-                 batch_size=128, num_epochs=10, optimizer='sgd', loss='mse', initial_epoch=0, sample=False):
+                 batch_size=128, num_epochs=10, optimizer='sgd', loss='mse', initial_epoch=0, sample=False, lr=None):
 
         """
 
@@ -96,11 +96,11 @@ class YearbookModel:
                                                            batch_size, num_epochs,
                                                            optimizer, loss,
                                                            initial_epoch,
-                                                           sample)
+                                                           sample, lr)
 
     def getAlexNet(self, train_images, train_labels, load_saved_model,
                    model_save_path, use_pretraining, pretrained_weights_path, train_dir, val_dir,
-                   fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample):
+                   fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample, lr=None):
         """
 
         :param load_saved_model: boolean (whether to just load the model from weights path)
@@ -185,7 +185,7 @@ class YearbookModel:
 
     def getVGG16(self, train_images, train_labels, load_saved_model,
                  model_save_path, use_pretraining, pretrained_weights_path, train_dir,
-                 val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample):
+                 val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample, lr=None):
         """
 
         :param load_saved_model: boolean (whether to just load the model from weights path)
@@ -272,7 +272,7 @@ class YearbookModel:
 
     def getVGG19(self, train_images, train_labels, load_saved_model,
                  model_save_path, use_pretraining, pretrained_weights_path, train_dir,
-                 val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample):
+                 val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample, lr=None):
         """
 
         :param load_saved_model: boolean (whether to just load the model from weights path)
@@ -350,7 +350,7 @@ class YearbookModel:
 
     def getResNet152(self, train_images, train_labels, load_saved_model,
                      model_save_path, use_pretraining, pretrained_weights_path, train_dir,
-                     val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample):
+                     val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample, lr=None):
         """
 
         :param load_saved_model: boolean (whether to just load the model from weights path)
@@ -420,7 +420,7 @@ class YearbookModel:
 
     def getResNet50(self, train_images, train_labels, load_saved_model,
                     model_save_path, use_pretraining, pretrained_weights_path, train_dir,
-                    val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample):
+                    val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample, lr=None):
         """
 
         :param load_saved_model: boolean (whether to just load the model from weights path)
@@ -491,7 +491,8 @@ class YearbookModel:
 
     def getKerasResNet50(self, train_images, train_labels, load_saved_model,
                          model_save_path, use_pretraining, pretrained_weights_path, train_dir,
-                         val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample):
+                         val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss,
+                         initial_epoch, sample, lr=None):
         """
 
         :param load_saved_model: boolean (whether to just load the model from weights path)
@@ -518,7 +519,7 @@ class YearbookModel:
         else:
             model = keras_resnet50_model(img_rows=img_rows, img_cols=img_cols, channels=channels,
                                          num_classes=NUM_CLASSES_YEARBOOK, fine_tuning_method=fine_tuning_method,
-                                         optimizer=optimizer, loss=loss)
+                                         optimizer=optimizer, loss=loss, learning_rate=lr)
 
         if initial_epoch >= num_epochs:
             print(get_time_string() + 'Not fitting the model since initial_epoch is >= num_epochs. Returning model..')
@@ -562,7 +563,7 @@ class YearbookModel:
 
     def getDenseNet169(self, train_images, train_labels, load_saved_model,
                        model_save_path, use_pretraining, pretrained_weights_path, train_dir,
-                       val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample):
+                       val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample, lr=None):
         """
 
         :param load_saved_model: boolean (whether to just load the model from weights path)
@@ -648,7 +649,7 @@ class YearbookModel:
 
     def getDenseNet161(self, train_images, train_labels, load_saved_model,
                        model_save_path, use_pretraining, pretrained_weights_path, train_dir,
-                       val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample):
+                       val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample, lr=None):
         """
 
         :param load_saved_model: boolean (whether to just load the model from weights path)
@@ -734,7 +735,7 @@ class YearbookModel:
 
     def getDenseNet121(self, train_images, train_labels, load_saved_model,
                        model_save_path, use_pretraining, pretrained_weights_path, train_dir,
-                       val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample):
+                       val_dir, fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample, lr=None):
         """
 
         :param load_saved_model: boolean (whether to just load the model from weights path)

@@ -19,7 +19,7 @@ class StreetViewModel:
                  use_pretraining=False,
                  pretrained_weights_path=None, train_dir=None, val_dir=None, fine_tuning_method=END_TO_END_FINE_TUNING,
                  batch_size=128, num_epochs=10, optimizer='sgd', loss='mse', initial_epoch=0, sample=False,
-                 width=20, height=20):
+                 width=20, height=20, lr=None):
 
         """
 
@@ -47,7 +47,8 @@ class StreetViewModel:
         train_data = listStreetView(True, False, sample)
 
         if model_architecture in CLASSIFICATION_MODELS:
-            train_images, train_gps = get_streetview_data_and_labels_one_hot(train_data, STREETVIEW_TRAIN_PATH, width, height)
+            train_images, train_gps = get_streetview_data_and_labels_one_hot(train_data, STREETVIEW_TRAIN_PATH, width,
+                                                                             height)
         else:
             train_images, train_gps = get_streetview_data_and_labels(train_data, STREETVIEW_TRAIN_PATH)
 
@@ -60,12 +61,12 @@ class StreetViewModel:
                                                            batch_size, num_epochs,
                                                            optimizer, loss,
                                                            initial_epoch,
-                                                           sample, width, height)
+                                                           sample, width, height, lr)
 
     def getKaggleModel(self, train_images, train_gps, load_saved_model,
                        model_save_path, use_pretraining, pretrained_weights_path,
                        fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch,
-                       sample, width, height):
+                       sample, width, height, lr=None):
         """
 
         :param load_saved_model: boolean (whether to just load the model from weights path)
@@ -155,7 +156,7 @@ class StreetViewModel:
     def getAlexNetRegressionModel(self, train_images, train_gps, load_saved_model,
                                   model_save_path, use_pretraining, pretrained_weights_path,
                                   fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch,
-                                  sample, width, height):
+                                  sample, width, height, lr=None):
         """
 
         :param load_saved_model: boolean (whether to just load the model from weights path)
@@ -234,7 +235,7 @@ class StreetViewModel:
     def getAlexNetModel(self, train_images, train_gps, load_saved_model,
                         model_save_path, use_pretraining, pretrained_weights_path,
                         fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample,
-                        width, height):
+                        width, height, lr=None):
         """
 
         :param load_saved_model: boolean (whether to just load the model from weights path)
@@ -318,9 +319,9 @@ class StreetViewModel:
         return model
 
     def getKerasResnet50Model(self, train_images, train_gps, load_saved_model,
-                        model_save_path, use_pretraining, pretrained_weights_path,
-                        fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample,
-                        width, height):
+                              model_save_path, use_pretraining, pretrained_weights_path,
+                              fine_tuning_method, batch_size, num_epochs, optimizer, loss, initial_epoch, sample,
+                              width, height, lr=None):
         """
 
         :param load_saved_model: boolean (whether to just load the model from weights path)
@@ -349,8 +350,10 @@ class StreetViewModel:
             print(get_time_string() + 'Loading saved model from ' + model_save_path + '..')
             model = load_model(model_save_path)
         else:
-            model = keras_resnet50_model(img_rows=img_rows, img_cols=img_cols, channels=channels, num_classes=num_classes,
-                                  optimizer=optimizer, loss=loss, fine_tuning_method=fine_tuning_method)
+            model = keras_resnet50_model(img_rows=img_rows, img_cols=img_cols, channels=channels,
+                                         num_classes=num_classes,
+                                         optimizer=optimizer, loss=loss, fine_tuning_method=fine_tuning_method,
+                                         learning_rate=lr)
 
         if initial_epoch >= num_epochs:
             print(get_time_string() + 'Not fitting the model since initial_epoch is >= num_epochs. Returning model..')

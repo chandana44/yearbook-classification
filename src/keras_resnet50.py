@@ -7,7 +7,8 @@ from util import *
 
 
 def keras_resnet50_model(img_rows=224, img_cols=224, channels=3, num_classes=400, optimizer='sgd',
-                         loss='categorical_crossentropy', fine_tuning_method=END_TO_END_FINE_TUNING):
+                         loss='categorical_crossentropy', fine_tuning_method=END_TO_END_FINE_TUNING,
+                         learning_rate=None):
 
     base_model = ResNet50(weights='imagenet', include_top=False,
                           input_shape=(channels, img_rows, img_cols))
@@ -24,9 +25,15 @@ def keras_resnet50_model(img_rows=224, img_cols=224, channels=3, num_classes=400
 
     # Specifying learning rate for optimizers
     if optimizer == 'sgd':
-        optimizer = SGD(lr=1e-3, decay=1e-6, momentum=0.9, nesterov=True)
+        lr = 1e-3
+        if learning_rate is not None:
+            lr = learning_rate
+        optimizer = SGD(lr=lr, decay=1e-6, momentum=0.9, nesterov=True)
     if optimizer == 'adam':
-        optimizer = Adam(lr=1e-4)
+        lr = 1e-4
+        if learning_rate is not None:
+            lr = learning_rate
+        optimizer = Adam(lr=lr)
 
     if loss == 'l1':
         loss = get_l1_loss
