@@ -19,6 +19,9 @@ YEARBOOK_TXT_SAMPLE_PREFIX = path.join(YEARBOOK_PATH, "yearbook_sample")
 
 YEARBOOK_TRAIN_PATH = path.join(YEARBOOK_PATH, 'train')
 YEARBOOK_VALID_PATH = path.join(YEARBOOK_PATH, 'valid')
+YEARBOOK_TEST_PATH = path.join(YEARBOOK_PATH, 'test')
+YEARBOOK_TEST_LABEL_PATH = path.join(SRC_PATH, '..', 'output', 'yearbook_test_label.txt')
+YEARBOOK_TEST_LABEL_PREFIX = path.join(SRC_PATH, '..', 'output', 'yearbook_test_')
 
 STREETVIEW_PATH = path.join(DATA_PATH, "geo")
 STREETVIEW_TXT_PREFIX = path.join(STREETVIEW_PATH, "geo")
@@ -516,6 +519,45 @@ def evaluateYearbookFromEnsembledModelsMultiple(models_map, individual_models_2d
         calculate_metrics_over_argmax(mat, total_count, valid_years)
 
 
+def testYearbookFromEnsembledModelsMultiple(models_map, individual_models_2d, sample=False):
+    test_list = testListYearbook(sample=sample)
+    test_images = [path.join(YEARBOOK_TEST_PATH, item[0]) for item in test_list]
+
+    total_count = len(test_images)
+    batch_size = 128
+    print(get_time_string() + 'Total test data: ' + str(total_count))
+
+    print(get_time_string() + 'Calculating predictions for each architecture..')
+    predictions_map = {}
+    for models_1d in individual_models_2d:
+        for model_checkpoint in models_1d:
+            if model_checkpoint not in predictions_map:  # If not already predicted for this model
+                count = 0
+                architecture = model_checkpoint.split(':')[0]
+                model = models_map[model_checkpoint]
+                print(get_time_string() + 'Starting testing for model_checkpoint ' + model_checkpoint)
+                years_full = np.empty(0)  # Contains predictions for the entire validation set
+                for x_chunk, _ in chunks(test_images, test_list, batch_size, architecture):
+                    batch_len = len(x_chunk)
+                    print(get_time_string() + 'Testing ' + str(count + 1) + ' - ' + str(count + batch_size))
+                    predictions = model.predict(x_chunk)
+                    years = np.array([np.argmax(p) + 1900 for p in predictions])
+                    years_full = np.concatenate((years_full, years), axis=0)
+                    count += batch_len
+                predictions_map[model_checkpoint] = years_full
+
+    for models_1d in individual_models_2d:
+        test_file_suffix = '--'.join(models_1d)
+
+        print(get_time_string() + 'Calculating ensembled L1 for the models: ' + str(models_1d))
+        # Matrix of predictions where each column corresponds to one architecture
+        mat = np.zeros((total_count, len(models_1d)))
+        i = 0
+        for model_checkpoint in models_1d:
+            mat[:, i] = predictions_map[model_checkpoint]
+        test_calculate_metrics_over_argmax(mat, total_count, test_list, test_file_suffix)
+
+
 # Evaluate L1 distance on valid data for geolocation dataset by ensembling list of models
 # Right now, it calculates mean and median L1 distances
 def evaluateGeoLocationFromEnsembledModels(models_architectures_tuples, sample=False, width=10, height=10):
@@ -575,6 +617,55 @@ def calculate_ensembled_l1_geolocation(mat, total_count, valid_gps):
     median_l1_dist /= total_count
     print(get_time_string() + 'L1 distance for validation set: ' + 'mean l1 distance: ' + str(
         mean_l1_dist) + 'median l1 distance' + str(median_l1_dist))
+
+
+def getYearbookTestOutputFile(checkpoint_file):
+    # checkpoint_ext = '.h5'
+    # checkpoint_file_wo_ext = checkpoint_file.split(checkpoint_ext)[0]
+
+    output_path = YEARBOOK_TEST_LABEL_PATH
+    ext = '.txt'
+    output_path_wo_ext = output_path.split(ext)[0]
+
+    return output_path_wo_ext + '-' + checkpoint_file + ext
+
+
+def test_calculate_metrics_over_argmax(mat, total_count, image_names, test_file_suffix):
+    print(get_time_string() + 'Testing: Calculating metrics over argmax..')
+
+    output_file_mean = getYearbookTestOutputFile(test_file_suffix + '--mean')
+    output_mean = open(output_file_mean, 'w')
+
+    output_file_median = getYearbookTestOutputFile(test_file_suffix + '--median')
+    output_median = open(output_file_median, 'w')
+
+    output_file_close_mean = getYearbookTestOutputFile(test_file_suffix + '--close_mean')
+    output_close_mean = open(output_file_close_mean, 'w')
+
+    for i in range(total_count):
+        m = mat[i, :]  # 1-d array with predictions for a particular image from different architectures
+        mean = int(round(np.mean(m)))
+        closest_to_mean = mean
+        median = int(round(np.median(m)))
+
+        mx = 10000
+        for x in np.nditer(m):
+            if abs(x - mean) < mx:
+                mx = abs(x - mean)
+                closest_to_mean = x
+
+        out_string = image_names[i][0] + '\t' + str(mean) + '\n'
+        output_mean.write(out_string)
+
+        out_string = image_names[i][0] + '\t' + str(median) + '\n'
+        output_median.write(out_string)
+
+        out_string = image_names[i][0] + '\t' + str(closest_to_mean) + '\n'
+        output_close_mean.write(out_string)
+
+    output_mean.close()
+    output_median.close()
+    output_close_mean.close()
 
 
 def calculate_metrics_over_argmax(mat, total_count, valid_years):

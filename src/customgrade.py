@@ -11,10 +11,7 @@ from streetviewModel import *
 
 SRC_PATH = path.dirname(path.abspath(__file__))
 DATA_PATH = path.join(SRC_PATH, '..', 'data')
-YEARBOOK_PATH = path.join(DATA_PATH, 'yearbook')
-YEARBOOK_VALID_PATH = path.join(YEARBOOK_PATH, 'valid')
-YEARBOOK_TEST_PATH = path.join(YEARBOOK_PATH, 'test')
-YEARBOOK_TEST_LABEL_PATH = path.join(SRC_PATH, '..', 'output', 'yearbook_test_label.txt')
+
 STREETVIEW_PATH = path.join(DATA_PATH, 'geo')
 STREETVIEW_VALID_PATH = path.join(STREETVIEW_PATH, 'valid')
 STREETVIEW_TEST_PATH = path.join(STREETVIEW_PATH, 'test')
@@ -44,15 +41,15 @@ pretrained_weights_path_map = {ALEXNET_ARCHITECTURE: ALEXNET_PRETRAINED_WEIGHT_P
                                KAGGLE_ARCHITECTURE: KAGGLE_PRETRAINED_WEIGHT_PATH}
 
 
-def getYearbookTestOutputFile(checkpoint_file):
-    checkpoint_ext = '.h5'
-    checkpoint_file_wo_ext = checkpoint_file.split(checkpoint_ext)[0]
-
-    output_path = YEARBOOK_TEST_LABEL_PATH
-    ext = '.txt'
-    output_path_wo_ext = output_path.split(ext)[0]
-
-    return output_path_wo_ext + '-' + checkpoint_file_wo_ext + ext
+# def getYearbookTestOutputFile(checkpoint_file):
+#     checkpoint_ext = '.h5'
+#     checkpoint_file_wo_ext = checkpoint_file.split(checkpoint_ext)[0]
+#
+#     output_path = YEARBOOK_TEST_LABEL_PATH
+#     ext = '.txt'
+#     output_path_wo_ext = output_path.split(ext)[0]
+#
+#     return output_path_wo_ext + '-' + checkpoint_file_wo_ext + ext
 
 
 def getGeolocationTestOutputFile(checkpoint_file):
@@ -85,7 +82,7 @@ def predictTestYearbookFromModel(model, architecture, checkpoint_file, sample=Fa
         years = np.array([np.argmax(p) + 1900 for p in predictions])
         i = 0
         for pred_year in years:
-            out_string = image_name_chunk[i] + '\t' + str(pred_year) + '\n'
+            out_string = image_name_chunk[i][0] + '\t' + str(pred_year) + '\n'
             output.write(out_string)
             i += 1
         count += batch_size
@@ -314,8 +311,8 @@ if __name__ == "__main__":
                                                         sample=args.sample)
             # evaluateFromEnsembledModels(args.dataset_type, models_architectures_tuples=models_architectures_tuples,
             #                             sample=args.sample, width=args.width, height=args.height)
-        elif args.type == 'test':  # TODO implement ensembling while testing also
-            pass
+        elif args.type == 'test':
+            testYearbookFromEnsembledModelsMultiple(models_map, individual_models_2d, sample=args.sample)
             # predictTestYearbookFromModel(trained_model, args.model_architecture, args.sample)
         else:
             print(get_time_string() + "Unknown type '%s'", args.type)
