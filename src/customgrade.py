@@ -86,7 +86,8 @@ def predictTestYearbookFromModel(model, architecture, checkpoint_file, sample=Fa
 
 # Predict label for test data on yearbook dataset
 def predictTestGeoLocationFromModel(model, architecture, checkpoint_file, width, height, sample=False):
-    min_x, max_x, min_y, max_y = get_min_max_xy_geo()
+    if architecture in CLASSIFICATION_MODELS:
+        min_x, max_x, min_y, max_y = get_min_max_xy_geo()
 
     test_list = util.testListStreetView(sample=sample)
     test_images = [path.join(STREETVIEW_TEST_PATH, item[0]) for item in test_list]
@@ -114,12 +115,12 @@ def predictTestGeoLocationFromModel(model, architecture, checkpoint_file, width,
                 xy_coordinates[i, 1] = y
             coordinates = XYToCoordinate(xy_coordinates)
             for i in range(batch_len):
-                out_string = image_name_chunk[i] + '\t' + str(coordinates[i, 0]) + '\t' + str(coordinates[i, 1]) + '\n'
+                out_string = image_name_chunk[i][0] + '\t' + str(coordinates[i, 0]) + '\t' + str(coordinates[i, 1]) + '\n'
                 output.write(out_string)
         else:  # Regression nets
             latslongs = np.array([[p[0], p[1]] for p in predictions])
             for i in range(batch_len):
-                out_string = image_name_chunk[i] + '\t' + str(latslongs[i][0]) + '\t' + str(latslongs[i][1]) + '\n'
+                out_string = image_name_chunk[i][0] + '\t' + str(latslongs[i][0]) + '\t' + str(latslongs[i][1]) + '\n'
                 output.write(out_string)
 
         count += batch_size
@@ -373,7 +374,7 @@ if __name__ == "__main__":
                 evaluateStreetviewFromModel(trained_model, args.model_architecture, args.sample)
         elif args.type == 'test':
             predictTestGeoLocationFromModel(trained_model, args.model_architecture, args.checkpoint_file_name,
-                                            args.widgth, args.height, args.sample)
+                                            args.width, args.height, args.sample)
         else:
             print(get_time_string() + "Unknown type '%s'", args.type)
     else:
