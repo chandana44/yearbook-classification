@@ -68,7 +68,6 @@ def getGeolocationTestOutputFile(checkpoint_file):
 
 # Predict label for test data on yearbook dataset
 def predictTestYearbookFromModel(model, architecture, checkpoint_file, sample=False):
-
     test_list = util.testListYearbook(sample=sample)
     test_images = [path.join(YEARBOOK_TEST_PATH, item[0]) for item in test_list]
 
@@ -113,7 +112,7 @@ def predictTestGeoLocationFromModel(model, architecture, checkpoint_file, width,
         batch_len = len(x_chunk)
         predictions = model.predict(x_chunk)
 
-        if architecture in CLASSIFICATION_MODELS: # Classification nets
+        if architecture in CLASSIFICATION_MODELS:  # Classification nets
             int_labels = np.array([np.argmax(p) for p in predictions])
             xy_coordinates = np.zeros((batch_len, 2))
             for i in range(batch_len):
@@ -125,7 +124,7 @@ def predictTestGeoLocationFromModel(model, architecture, checkpoint_file, width,
             for i in range(batch_len):
                 out_string = image_name_chunk[i] + '\t' + str(coordinates[i, 0]) + '\t' + str(coordinates[i, 1]) + '\n'
                 output.write(out_string)
-        else: # Regression nets
+        else:  # Regression nets
             latslongs = np.array([[p[0], p[1]] for p in predictions])
             for i in range(batch_len):
                 out_string = image_name_chunk[i] + '\t' + str(latslongs[i][0]) + '\t' + str(latslongs[i][1]) + '\n'
@@ -163,6 +162,35 @@ def getModels(models_checkpoints, use_pretraining=True,
     return models_architectures_tuples
 
 
+def getModelsMap(individual_models_2d, use_pretraining=True,
+                 pretrained_weights_path=None,
+                 train_dir=None, val_dir=None, fine_tuning_method=None,
+                 batch_size=None, num_epochs=10,
+                 optimizer='sgd', loss='mse',
+                 initial_epoch=0,
+                 sample=0):
+    models_map = {}
+    for models_1d in individual_models_2d:
+        for model_checkpoint in models_1d:
+            if model_checkpoint not in models_map:  # If model not already created
+                architecture = model_checkpoint.split(':')[0]
+                checkpoint_file_name = model_checkpoint.split(':')[1]
+
+                if architecture not in ARCHITECTURES:
+                    raise Exception('Invalid architecture type!')
+
+                yearbookModel = YearbookModel()
+                this_model = yearbookModel.getModel(model_architecture=architecture, load_saved_model=1,
+                                                    model_save_path=CHECKPOINT_BASE_DIR + checkpoint_file_name,
+                                                    initial_epoch=initial_epoch, use_pretraining=use_pretraining,
+                                                    pretrained_weights_path=pretrained_weights_path,
+                                                    fine_tuning_method=fine_tuning_method, batch_size=batch_size,
+                                                    num_epochs=num_epochs, optimizer=optimizer, loss=loss,
+                                                    sample=sample)
+                models_map[model_checkpoint] = this_model
+    return models_map
+
+
 if __name__ == "__main__":
     if is_using_gpu():
         print('Program is using GPU..')
@@ -176,7 +204,8 @@ if __name__ == "__main__":
                         help="Dataset: valid/test", required=True)
 
     parser.add_argument("--model_architecture", dest="model_architecture",
-                        help="Model architecture: alexnet/vgg16/vgg19/resnet152/resnet50/densenet169/densenet121/densenet161", required=True)
+                        help="Model architecture: alexnet/vgg16/vgg19/resnet152/resnet50/densenet169/densenet121/densenet161",
+                        required=True)
     parser.add_argument("--load_saved_model", dest="load_saved_model",
                         help="load_saved_model: Whether to use saved model",
                         required=False, default=0, type=int)
@@ -236,19 +265,42 @@ if __name__ == "__main__":
     if args.ensemble == 1:
         if args.ensemble_models is None:
             raise Exception('ensemble is 1 but no models/checkpoint files specified!')
-        models_checkpoints = args.ensemble_models.split(
-            ',')  # array of entries of format <architecture>:<checkpoint_file>
-        models_architectures_tuples = getModels(models_checkpoints, use_pretraining=args.use_pretraining,
-                                                pretrained_weights_path=pretrained_weights_path_map[args.model_architecture],
-                                                train_dir=None, val_dir=None,
-                                                fine_tuning_method=args.fine_tuning_method,
-                                                batch_size=args.batch_size, num_epochs=args.num_epochs,
-                                                optimizer=args.optimizer, loss=args.loss,
-                                                initial_epoch=1000,
-                                                # Just returning the model without any further training
-                                                sample=args.sample)
+        # models_checkpoints = args.ensemble_models.split(
+        #     ',')  # array of entries of format <architecture>:<checkpoint_file>
+        # models_architectures_tuples = getModels(models_checkpoints, use_pretraining=args.use_pretraining,
+        #                                         pretrained_weights_path=pretrained_weights_path_map[args.model_architecture],
+        #                                         train_dir=None, val_dir=None,
+        #                                         fine_tuning_method=args.fine_tuning_method,
+        #                                         batch_size=args.batch_size, num_epochs=args.num_epochs,
+        #                                         optimizer=args.optimizer, loss=args.loss,
+        #                                         initial_epoch=1000,
+        #                                         # Just returning the model without any further training
+        #                                         sample=args.sample)
+
+        models_architectures_tuples_list = []
+        ensembled_models = args.ensemble_models.split(
+            '#')  # array of entires of format <model_checkpoints1>#<model_checkpoints2>
+
+        individual_models_2d = []
+        for ensembled_model in ensembled_models:
+            models_checkpoints = ensembled_model.split(
+                ',')  # array of entries of format <architecture>:<checkpoint_file>
+            individual_models_2d.append(models_checkpoints)
+
+        print(str(individual_models_2d))
+        models_map = getModelsMap(individual_models_2d, use_pretraining=args.use_pretraining,
+                                  pretrained_weights_path=pretrained_weights_path_map[args.model_architecture],
+                                  train_dir=None, val_dir=None,
+                                  fine_tuning_method=args.fine_tuning_method,
+                                  batch_size=args.batch_size, num_epochs=args.num_epochs,
+                                  optimizer=args.optimizer, loss=args.loss,
+                                  initial_epoch=1000,
+                                  # Just returning the model without any further training
+                                  sample=args.sample)
+
         if args.type == 'valid':
-            evaluateYearbookFromEnsembledModels(models_architectures_tuples=models_architectures_tuples, sample=args.sample)
+            evaluateYearbookFromEnsembledModelsMultiple(models_map, individual_models_2d,
+                                                        sample=args.sample)
         elif args.type == 'test':  # TODO implement ensembling while testing also
             pass
             # predictTestYearbookFromModel(trained_model, args.model_architecture, args.sample)
@@ -298,10 +350,10 @@ if __name__ == "__main__":
                                        sample=args.sample, width=args.width,
                                        height=args.height, lr=args.lr)
         if args.type == 'valid':
-            if args.model_architecture in CLASSIFICATION_MODELS: # Classification nets
+            if args.model_architecture in CLASSIFICATION_MODELS:  # Classification nets
                 evaluateStreetviewFromModelClassification(trained_model, args.model_architecture, width=args.width,
                                                           height=args.height, sample=args.sample)
-            else: # Regression nets
+            else:  # Regression nets
                 evaluateStreetviewFromModel(trained_model, args.model_architecture, args.sample)
         elif args.type == 'test':
             predictTestGeoLocationFromModel(trained_model, args.model_architecture, args.checkpoint_file_name,

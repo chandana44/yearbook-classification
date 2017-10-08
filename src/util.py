@@ -466,6 +466,46 @@ def evaluateYearbookFromEnsembledModels(models_architectures_tuples, sample=Fals
     calculate_argmax_over_metrics(mat2, total_count, np.array(valid_years))
 
 
+# Evaluate L1 distance on valid data for yearbook dataset by ensembling list of models
+# Right now, it calculates mean, median and closest to mean L1 distances
+def evaluateYearbookFromEnsembledModelsMultiple(models_map, individual_models_2d, sample=False):
+    valid_data = listYearbook(False, True, sample)
+    valid_images = [path.join(YEARBOOK_VALID_PATH, item[0]) for item in valid_data]
+    valid_years = [int(item[1]) for item in valid_data]
+
+    total_count = len(valid_data)
+    batch_size = 128
+    print(get_time_string() + 'Total validation data: ' + str(total_count))
+
+    print(get_time_string() + 'Calculating predictions for each architecture..')
+    predictions_map = {}
+    for models_1d in individual_models_2d:
+        for model_checkpoint in models_1d:
+            if model_checkpoint not in predictions_map:  # If not already predicted for this model
+                count = 0
+                architecture = model_checkpoint.split(':')[0]
+                model = models_map[model_checkpoint]
+                print(get_time_string() + 'Starting validation for model_checkpoint ' + model_checkpoint)
+                years_full = np.empty(0)  # Contains predictions for the entire validation set
+                for x_chunk, y_chunk in chunks(valid_images, valid_years, batch_size, architecture):
+                    batch_len = len(x_chunk)
+                    print(get_time_string() + 'Validating ' + str(count + 1) + ' - ' + str(count + batch_size))
+                    predictions = model.predict(x_chunk)
+                    years = np.array([np.argmax(p) + 1900 for p in predictions])
+                    years_full = np.concatenate((years_full, years), axis=0)
+                    count += batch_len
+                predictions_map[model_checkpoint] = years_full
+
+    for models_1d in individual_models_2d:
+        print(get_time_string() + 'Calculating ensembled L1 for the models: ' + str(models_1d))
+        # Matrix of predictions where each column corresponds to one architecture
+        mat = np.zeros((total_count, len(models_1d)))
+        i = 0
+        for model_checkpoint in models_1d:
+            mat[:, i] = predictions_map[model_checkpoint]
+        calculate_metrics_over_argmax(mat, total_count, valid_years)
+
+
 def calculate_metrics_over_argmax(mat, total_count, valid_years):
     print(get_time_string() + 'Calculating metrics over argmax..')
 
