@@ -29,6 +29,9 @@ STREETVIEW_TXT_SAMPLE_PREFIX = path.join(STREETVIEW_PATH, "geo_sample")
 
 STREETVIEW_TRAIN_PATH = path.join(STREETVIEW_PATH, 'train')
 STREETVIEW_VALID_PATH = path.join(STREETVIEW_PATH, 'valid')
+STREETVIEW_TEST_PATH = path.join(STREETVIEW_PATH, 'test')
+STREETVIEW_TEST_LABEL_PATH = path.join(SRC_PATH, '..', 'output', 'geo_test_label.txt')
+STREETVIEW_TEST_LABEL_PREFIX = path.join(SRC_PATH, '..', 'output', 'geo_test_')
 
 NUM_CLASSES_YEARBOOK = 118
 NUM_CLASSES_GEOLOCATION = 2
@@ -164,9 +167,9 @@ def testListYearbook(sample=False):
 
 def testListStreetView(sample=False):
     r = []
-    prefix = YEARBOOK_TXT_PREFIX
+    prefix = STREETVIEW_TXT_PREFIX
     if sample:
-        prefix = YEARBOOK_TXT_SAMPLE_PREFIX
+        prefix = STREETVIEW_TXT_SAMPLE_PREFIX
     r += [n.strip().split('\t') for n in open(prefix + '_test.txt', 'r')]
     return r
 
@@ -434,16 +437,6 @@ def evaluateYearbookFromModel(model, architecture, sample=False):
     print(get_time_string() + 'L1 distance for validation set: ' + str(l1_dist))
     return l1_dist
 
-
-def evaluateFromEnsembledModels(dataset, models_architectures_tuples, sample=False, width=10, height=10):
-    if dataset == 'yearbook':
-        evaluateYearbookFromEnsembledModels(models_architectures_tuples, sample)
-    elif dataset == 'geolocation':
-        evaluateGeoLocationFromEnsembledModels(models_architectures_tuples, sample, width=width, height=height)
-    else:
-        raise Exception('Unknown dataset type')
-
-
 # Evaluate L1 distance on valid data for yearbook dataset by ensembling list of models
 # Right now, it calculates mean, median and closest to mean L1 distances
 def evaluateYearbookFromEnsembledModels(models_architectures_tuples, sample=False):
@@ -598,6 +591,51 @@ def evaluateGeoLocationFromEnsembledModels(models_architectures_tuples, sample=F
         i += 1
 
     calculate_ensembled_l1_geolocation(mat, total_count, valid_gps)
+
+def testGeoLocationFromEnsembledModels(models_architectures_tuples, sample=False, width=10, height=10):
+    test_data = testListStreetView(sample)
+    test_images = [path.join(STREETVIEW_TEST_PATH, item[0]) for item in test_data]
+    test_gps = [[float(item[1]), float(item[2])] for item in test_data]
+    min_x, max_x, min_y, max_y = get_min_max_xy_geo()
+
+    total_count = len(test_data)
+    batch_size = 128
+    print(get_time_string() + 'Total test data: ' + str(total_count))
+
+    output_file = STREETVIEW_TEST_LABEL_PATH
+    output = open(output_file, 'w')
+
+    # Matrix of predictions where each column corresponds to one architecture
+    mat = np.zeros((total_count, NUM_CLASSES_GEOLOCATION, len(models_architectures_tuples)))
+    i = 0
+
+    for (model, architecture) in models_architectures_tuples:
+        count = 0
+        print(get_time_string() + 'Starting validation for architecture ' + architecture)
+        for x_chunk, y_chunk in chunks(test_images, test_gps, batch_size, architecture):
+            batch_len = len(x_chunk)
+            print(get_time_string() + 'Testing ' + str(count + 1) + ' - ' + str(count + batch_size))
+            predictions = model.predict(x_chunk)
+            if architecture not in CLASSIFICATION_MODELS:
+                latslongs = np.array([[p[0], p[1]] for p in predictions])
+            else:
+                int_labels = np.array([np.argmax(p) for p in predictions])
+                xy_coordinates = np.zeros((batch_len, 2))
+                for i in range(batch_len):
+                    int_label = int_labels[i]
+                    x, y = get_xy_from_int_label(width, height, int_label, min_x, max_x, min_y, max_y)
+                    xy_coordinates[i, 0] = x
+                    xy_coordinates[i, 1] = y
+                latslongs = XYToCoordinate(xy_coordinates)
+
+            mat[count: count + batch_len, :, i] = latslongs
+            count += batch_len
+        i += 1
+
+    mean_latslongs = np.mean(mat, axis=2)
+    for i in range(len(mean_latslongs)):
+        out_string = test_data[i][0] + '\t' + str(mean_latslongs[i][0]) + '\t' + str(mean_latslongs[i][1]) + '\n'
+        output.write(out_string)
 
 
 def calculate_ensembled_l1_geolocation(mat, total_count, valid_gps):

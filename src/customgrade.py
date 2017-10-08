@@ -12,11 +12,6 @@ from streetviewModel import *
 SRC_PATH = path.dirname(path.abspath(__file__))
 DATA_PATH = path.join(SRC_PATH, '..', 'data')
 
-STREETVIEW_PATH = path.join(DATA_PATH, 'geo')
-STREETVIEW_VALID_PATH = path.join(STREETVIEW_PATH, 'valid')
-STREETVIEW_TEST_PATH = path.join(STREETVIEW_PATH, 'test')
-STREETVIEW_TEST_LABEL_PATH = path.join(SRC_PATH, '..', 'output', 'geo_test_label.txt')
-
 CHECKPOINT_BASE_DIR = '../checkpoint/'
 ALEXNET_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/alexnet_weights.h5'
 VGG16_PRETRAINED_WEIGHT_PATH = '../pretrained_weights/vgg16_weights_th_dim_ordering_th_kernels.h5'
@@ -94,7 +89,7 @@ def predictTestGeoLocationFromModel(model, architecture, checkpoint_file, width,
     min_x, max_x, min_y, max_y = get_min_max_xy_geo()
 
     test_list = util.testListStreetView(sample=sample)
-    test_images = [path.join(YEARBOOK_TEST_PATH, item[0]) for item in test_list]
+    test_images = [path.join(STREETVIEW_TEST_PATH, item[0]) for item in test_list]
 
     total_count = len(test_list)
     print(get_time_string() + "Total test data: ", total_count)
@@ -273,49 +268,60 @@ if __name__ == "__main__":
     if args.ensemble == 1:
         if args.ensemble_models is None:
             raise Exception('ensemble is 1 but no models/checkpoint files specified!')
-        # models_checkpoints = args.ensemble_models.split(
-        #     ',')  # array of entries of format <architecture>:<checkpoint_file>
-        # models_architectures_tuples = getModels(models_checkpoints, use_pretraining=args.use_pretraining,
-        #                                         pretrained_weights_path=pretrained_weights_path_map[args.model_architecture],
-        #                                         train_dir=None, val_dir=None,
-        #                                         fine_tuning_method=args.fine_tuning_method,
-        #                                         batch_size=args.batch_size, num_epochs=args.num_epochs,
-        #                                         optimizer=args.optimizer, loss=args.loss,
-        #                                         initial_epoch=1000,
-        #                                         # Just returning the model without any further training
-        #                                         sample=args.sample)
 
-        models_architectures_tuples_list = []
-        ensembled_models = args.ensemble_models.split(
-            '#')  # array of entires of format <model_checkpoints1>#<model_checkpoints2>
+        if args.dataset_type == 'yearbook':
+            models_architectures_tuples_list = []
+            ensembled_models = args.ensemble_models.split(
+                '#')  # array of entires of format <model_checkpoints1>#<model_checkpoints2>
 
-        individual_models_2d = []
-        for ensembled_model in ensembled_models:
-            models_checkpoints = ensembled_model.split(
+            individual_models_2d = []
+            for ensembled_model in ensembled_models:
+                models_checkpoints = ensembled_model.split(
+                    ',')  # array of entries of format <architecture>:<checkpoint_file>
+                individual_models_2d.append(models_checkpoints)
+
+            print(str(individual_models_2d))
+            models_map = getModelsMap(individual_models_2d, use_pretraining=args.use_pretraining,
+                                      pretrained_weights_path=pretrained_weights_path_map[args.model_architecture],
+                                      train_dir=None, val_dir=None,
+                                      fine_tuning_method=args.fine_tuning_method,
+                                      batch_size=args.batch_size, num_epochs=args.num_epochs,
+                                      optimizer=args.optimizer, loss=args.loss,
+                                      initial_epoch=1000,
+                                      # Just returning the model without any further training
+                                      sample=args.sample)
+
+            if args.type == 'valid':
+                evaluateYearbookFromEnsembledModelsMultiple(models_map, individual_models_2d,
+                                                            sample=args.sample)
+            elif args.type == 'test':
+                testYearbookFromEnsembledModelsMultiple(models_map, individual_models_2d, sample=args.sample)
+                # predictTestYearbookFromModel(trained_model, args.model_architecture, args.sample)
+            else:
+                print(get_time_string() + "Unknown type '%s'", args.type)
+
+        elif args.dataset_type == 'geolocation':
+            models_checkpoints = args.ensemble_models.split(
                 ',')  # array of entries of format <architecture>:<checkpoint_file>
-            individual_models_2d.append(models_checkpoints)
+            models_architectures_tuples = getModels(models_checkpoints, use_pretraining=args.use_pretraining,
+                                                    pretrained_weights_path=pretrained_weights_path_map[
+                                                        args.model_architecture],
+                                                    train_dir=None, val_dir=None,
+                                                    fine_tuning_method=args.fine_tuning_method,
+                                                    batch_size=args.batch_size, num_epochs=args.num_epochs,
+                                                    optimizer=args.optimizer, loss=args.loss,
+                                                    initial_epoch=1000,
+                                                    # Just returning the model without any further training
+                                                    sample=args.sample)
 
-        print(str(individual_models_2d))
-        models_map = getModelsMap(individual_models_2d, use_pretraining=args.use_pretraining,
-                                  pretrained_weights_path=pretrained_weights_path_map[args.model_architecture],
-                                  train_dir=None, val_dir=None,
-                                  fine_tuning_method=args.fine_tuning_method,
-                                  batch_size=args.batch_size, num_epochs=args.num_epochs,
-                                  optimizer=args.optimizer, loss=args.loss,
-                                  initial_epoch=1000,
-                                  # Just returning the model without any further training
-                                  sample=args.sample)
-
-        if args.type == 'valid':
-            evaluateYearbookFromEnsembledModelsMultiple(models_map, individual_models_2d,
-                                                        sample=args.sample)
-            # evaluateFromEnsembledModels(args.dataset_type, models_architectures_tuples=models_architectures_tuples,
-            #                             sample=args.sample, width=args.width, height=args.height)
-        elif args.type == 'test':
-            testYearbookFromEnsembledModelsMultiple(models_map, individual_models_2d, sample=args.sample)
-            # predictTestYearbookFromModel(trained_model, args.model_architecture, args.sample)
+            if args.type == 'valid':
+                evaluateGeoLocationFromEnsembledModels(models_architectures_tuples, args.sample, args.width, args.height)
+            elif args.type == 'test':
+                testGeoLocationFromEnsembledModels(models_architectures_tuples, args.sample, args.width, args.height)
+            else:
+                print(get_time_string() + "Unknown type '%s'", args.type)
         else:
-            print(get_time_string() + "Unknown type '%s'", args.type)
+            raise Exception('Unknown dataset type')
 
         exit(0)
 
