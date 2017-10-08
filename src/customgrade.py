@@ -134,13 +134,13 @@ def predictTestGeoLocationFromModel(model, architecture, checkpoint_file, width,
     output.close()
 
 
-def getModels(models_checkpoints, use_pretraining=True,
+def getModels(dataset, models_checkpoints, use_pretraining=True,
               pretrained_weights_path=None,
               train_dir=None, val_dir=None, fine_tuning_method=None,
               batch_size=None, num_epochs=10,
               optimizer='sgd', loss='mse',
               initial_epoch=0,
-              sample=0):
+              sample=0, width=0, height=0):
     models_architectures_tuples = []
     for model_checkpoint in models_checkpoints:
         architecture = model_checkpoint.split(':')[0]
@@ -148,15 +148,26 @@ def getModels(models_checkpoints, use_pretraining=True,
 
         if architecture not in ARCHITECTURES:
             raise Exception('Invalid architecture type!')
-
-        yearbookModel = YearbookModel()
-        this_model = yearbookModel.getModel(model_architecture=architecture, load_saved_model=1,
-                                            model_save_path=CHECKPOINT_BASE_DIR + checkpoint_file_name,
-                                            initial_epoch=initial_epoch, use_pretraining=use_pretraining,
-                                            pretrained_weights_path=pretrained_weights_path,
-                                            fine_tuning_method=fine_tuning_method, batch_size=batch_size,
-                                            num_epochs=num_epochs, optimizer=optimizer, loss=loss,
-                                            sample=sample)
+        if dataset == 'yearbook':
+            yearbookModel = YearbookModel()
+            this_model = yearbookModel.getModel(model_architecture=architecture, load_saved_model=1,
+                                                model_save_path=CHECKPOINT_BASE_DIR + checkpoint_file_name,
+                                                initial_epoch=initial_epoch, use_pretraining=use_pretraining,
+                                                pretrained_weights_path=pretrained_weights_path,
+                                                fine_tuning_method=fine_tuning_method, batch_size=batch_size,
+                                                num_epochs=num_epochs, optimizer=optimizer, loss=loss,
+                                                sample=sample)
+        elif dataset == 'geolocation':
+            streetviewModel = StreetViewModel()
+            this_model = streetviewModel.getModel(model_architecture=architecture, load_saved_model=1,
+                                                  model_save_path=CHECKPOINT_BASE_DIR + checkpoint_file_name,
+                                                  initial_epoch=initial_epoch, use_pretraining=use_pretraining,
+                                                  pretrained_weights_path=pretrained_weights_path,
+                                                  fine_tuning_method=fine_tuning_method, batch_size=batch_size,
+                                                  num_epochs=num_epochs, optimizer=optimizer, loss=loss,
+                                                  sample=sample, width=width, height=height)
+        else:
+            raise Exception('Unknown dataset type')
         models_architectures_tuples.append((this_model, architecture))
 
     return models_architectures_tuples
@@ -301,6 +312,8 @@ if __name__ == "__main__":
         if args.type == 'valid':
             evaluateYearbookFromEnsembledModelsMultiple(models_map, individual_models_2d,
                                                         sample=args.sample)
+            # evaluateFromEnsembledModels(args.dataset_type, models_architectures_tuples=models_architectures_tuples,
+            #                             sample=args.sample, width=args.width, height=args.height)
         elif args.type == 'test':  # TODO implement ensembling while testing also
             pass
             # predictTestYearbookFromModel(trained_model, args.model_architecture, args.sample)
