@@ -28,6 +28,7 @@ STREETVIEW_TRAIN_PATH = path.join(STREETVIEW_PATH, 'train')
 STREETVIEW_VALID_PATH = path.join(STREETVIEW_PATH, 'valid')
 
 NUM_CLASSES_YEARBOOK = 118
+NUM_CLASSES_GEOLOCATION = 2
 
 yb_r = re.compile("(\d\d\d\d)_(.*)_(.*)_(.*)_(.*)")
 sv_r = re.compile("([+-]?\d*\.\d*)_([+-]?\d*\.\d*)_\d*_-004")
@@ -431,6 +432,15 @@ def evaluateYearbookFromModel(model, architecture, sample=False):
     return l1_dist
 
 
+def evaluateFromEnsembledModels(dataset, models_architectures_tuples, sample=False, width=10, height=10):
+    if dataset == 'yearbook':
+        evaluateYearbookFromEnsembledModels(models_architectures_tuples, sample)
+    elif dataset == 'geolocation':
+        evaluateGeoLocationFromEnsembledModels(models_architectures_tuples, sample, width=width, height=height)
+    else:
+        raise Exception('Unknown dataset type')
+
+
 # Evaluate L1 distance on valid data for yearbook dataset by ensembling list of models
 # Right now, it calculates mean, median and closest to mean L1 distances
 def evaluateYearbookFromEnsembledModels(models_architectures_tuples, sample=False):
@@ -464,6 +474,67 @@ def evaluateYearbookFromEnsembledModels(models_architectures_tuples, sample=Fals
 
     calculate_metrics_over_argmax(mat, total_count, valid_years)
     calculate_argmax_over_metrics(mat2, total_count, np.array(valid_years))
+
+
+# Evaluate L1 distance on valid data for geolocation dataset by ensembling list of models
+# Right now, it calculates mean and median L1 distances
+def evaluateGeoLocationFromEnsembledModels(models_architectures_tuples, sample=False, width=10, height=10):
+    valid_data = listStreetView(False, True, sample)
+    valid_images = [path.join(STREETVIEW_VALID_PATH, item[0]) for item in valid_data]
+    valid_gps = [[float(item[1]), float(item[2])] for item in valid_data]
+    min_x, max_x, min_y, max_y = get_min_max_xy_geo()
+
+    total_count = len(valid_data)
+    batch_size = 128
+    print(get_time_string() + 'Total validation data: ' + str(total_count))
+
+    # Matrix of predictions where each column corresponds to one architecture
+    mat = np.zeros((total_count, NUM_CLASSES_GEOLOCATION, len(models_architectures_tuples)))
+    i = 0
+
+    for (model, architecture) in models_architectures_tuples:
+        count = 0
+        print(get_time_string() + 'Starting validation for architecture ' + architecture)
+        for x_chunk, y_chunk in chunks(valid_images, valid_gps, batch_size, architecture):
+            batch_len = len(x_chunk)
+            print(get_time_string() + 'Validating ' + str(count + 1) + ' - ' + str(count + batch_size))
+            predictions = model.predict(x_chunk)
+            if (architecture == KAGGLE_ARCHITECTURE or architecture == ALEXNET_REGRESSION_ARCHITECTURE):
+                latslongs = np.array([[p[0], p[1]] for p in predictions])
+            else:
+                int_labels = np.array([np.argmax(p) for p in predictions])
+                xy_coordinates = np.zeros((batch_len, 2))
+                for i in range(batch_len):
+                    int_label = int_labels[i]
+                    x, y = get_xy_from_int_label(width, height, int_label, min_x, max_x, min_y, max_y)
+                    xy_coordinates[i, 0] = x
+                    xy_coordinates[i, 1] = y
+                latslongs = XYToCoordinate(xy_coordinates)
+
+            mat[count: count + batch_len, :, i] = latslongs
+            count += batch_len
+        i += 1
+
+    calculate_ensembled_l1_geolocation(mat, total_count, valid_gps)
+
+
+def calculate_ensembled_l1_geolocation(mat, total_count, valid_gps):
+    print(get_time_string() + 'Calculating argmax over metrics..')
+
+    mean_latslongs = np.mean(mat, axis=2)
+    median_latslongs = np.median(mat, axis=2)
+
+    mean_l1_dist = 0.0
+    median_l1_dist = 0.0
+
+    for i in range(0, total_count):
+        mean_l1_dist += dist(mean_latslongs[i][0], mean_latslongs[i][1], valid_gps[i][0], valid_gps[i][1])
+        median_l1_dist += dist(median_latslongs[i][0], median_latslongs[i][1], valid_gps[i][0], valid_gps[i][1])
+
+    mean_l1_dist /= total_count
+    median_l1_dist /= total_count
+    print(get_time_string() + 'L1 distance for validation set: ' + 'mean l1 distance: ' + str(
+        mean_l1_dist) + 'median l1 distance' + str(median_l1_dist))
 
 
 def calculate_metrics_over_argmax(mat, total_count, valid_years):
