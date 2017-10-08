@@ -14,7 +14,9 @@ def load(image_path):
 
 
 class Predictor:
-    DATASET_TYPE = 'yearbook'
+    def __init__(self, dataset, model_arch_tuples):
+        self.model_architecture_tuples = model_arch_tuples
+        self.dataset = dataset
 
     # baseline 1 which calculates the median of the train data and return each time
     def yearbook_baseline(self):
@@ -42,15 +44,44 @@ class Predictor:
         return med_coord
 
     def predict(self, image_path):
+        if self.dataset == 'yearbook':
+            mat = np.zeros(len(self.model_architecture_tuples))
+            i=0
 
-        img = load(image_path)
+            for (model, architecture) in self.model_architecture_tuples:
+                processed_image = preprocess_image_batch(np.array(image_path),architecture)
+                prediction = model.predict(processed_image)
+                year = np.array([np.argmax(prediction) + 1900])
+                mat[i] = year
+                i += 1
 
-        # TODO: load model
+            result = np.mean(mat)
+            #result = np.median(mat)
+        elif self.dataset == 'geolocation':
+            min_x, max_x, min_y, max_y = get_min_max_xy_geo()
 
-        # TODO: predict model and return result either in geolocation format or yearbook format
-        # depending on the dataset you are using
-        if self.DATASET_TYPE == 'geolocation':
-            result = self.streetview_baseline()  # for geolocation
-        elif self.DATASET_TYPE == 'yearbook':
-            result = self.yearbook_baseline()  # for yearbook
+            # Matrix of predictions where each column corresponds to one architecture
+            mat = np.zeros((NUM_CLASSES_GEOLOCATION, len(self.model_architecture_tuples)))
+            i = 0
+
+            for (model, architecture) in self.model_architecture_tuples:
+                processed_image = preprocess_image_batch(np.array(image_path),architecture)
+                prediction = model.predict(processed_image)
+                if architecture not in CLASSIFICATION_MODELS:
+                    latslongs = prediction
+                else:
+                    int_label = np.array([np.argmax(prediction)])
+                    xy_coordinates = np.zeros(2)
+                    x, y = get_xy_from_int_label(10, 10, int_label, min_x, max_x, min_y, max_y)
+                    xy_coordinates[0] = x
+                    xy_coordinates[1] = y
+                    latslongs = XYToCoordinate(xy_coordinates)
+                mat[ :, i] = latslongs
+                i += 1
+
+            mean_latslongs = np.mean(mat, axis=1)
+            result = mean_latslongs
+        else:
+            raise Exception('Unknown dataset type')
+
         return result
