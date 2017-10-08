@@ -74,10 +74,8 @@ def dist(lat1, lon1, lat2, lon2):
 
 
 # Evaluate L1 distance on valid data for yearbook dataset
-def evaluateYearbook(Predictor):
+def evaluateYearbook(predictor):
     test_list = util.listYearbook(False, True)
-    predictor = Predictor()
-    predictor.DATASET_TYPE = 'yearbook'
 
     total_count = len(test_list)
     l1_dist = 0.0
@@ -96,10 +94,8 @@ def evaluateYearbook(Predictor):
 
 
 # Evaluate L1 distance on valid data for geolocation dataset
-def evaluateStreetview(Predictor):
+def evaluateStreetview(predictor):
     test_list = listStreetView(False, True)
-    predictor = Predictor()
-    predictor.DATASET_TYPE = 'geolocation'
 
     total_count = len(test_list)
     l1_dist = 0
@@ -115,10 +111,8 @@ def evaluateStreetview(Predictor):
 
 
 # Predict label for test data on yearbook dataset
-def predictTestYearbook(Predictor):
+def predictTestYearbook(predictor):
     test_list = util.testListYearbook()
-    predictor = Predictor()
-    predictor.DATASET_TYPE = 'yearbook'
 
     total_count = len(test_list)
     print("Total test data: ", total_count)
@@ -133,10 +127,8 @@ def predictTestYearbook(Predictor):
 
 
 # Predict label for test data for geolocation dataset
-def predictTestStreetview(Predictor):
+def predictTestStreetview(predictor):
     test_list = testListStreetView()
-    predictor = Predictor()
-    predictor.DATASET_TYPE = 'geolocation'
 
     total_count = len(test_list)
     print("Total test data", total_count)
