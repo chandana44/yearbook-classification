@@ -36,9 +36,9 @@ resnet50_losses = [10.0473148333, 5.7825913356, 5.84727490517]
 def plot_validation_loss(ax, losses, num_epochs, title):
     losses = losses[0: num_epochs]
     if title == 'ResNet-50':
-        ax.plot(x=[1,2, 3, 6, 11], y=losses, linewidth=1.5)
-        ax.set_xlim([0, 12])
-        ax.set_ylim([0, 12])
+        ax.plot(losses, linewidth=1.5)  # TODO this is wrong since the losses obtained for epochs 1, 6 and 11
+        # ax.set_xlim([0, 12])
+        # ax.set_ylim([0, 12])
     else:
         ax.plot(losses, linewidth=1.5)
     ax.set_title(title)
