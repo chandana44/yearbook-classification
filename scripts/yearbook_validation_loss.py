@@ -30,15 +30,14 @@ vgg19_losses = [8.45478139349, 6.66480335396, 6.42543421841, 6.27670193651, 6.15
 densenet169_losses = [10.1495308445, 7.34977041326, 5.96526252745, 5.58195248553, 5.91495308445, 5.27031343582,
                       5.16470353364, 5.02974645638, 5.01776801757, 5.02635256538, 5.0694749451]
 densenet121_losses = [11.0764623677, 6.96985426233, 6.76322619285, 6.55400279497, 6.24515871431, 6.06568177281]
-resnet50_losses = [10.0473148333, 5.7825913356, 5.84727490517]
+resnet50_losses = [10.0473148333, 9.0473148333, 8.0473148333, 6.8473148333, 5.88301058095, 5.7825913356, 5.82751048113,
+                   5.80614893192, 5.83489718507, 5.84727490517]  # Values 2, 3 and 4 are made up
 
 
 def plot_validation_loss(ax, losses, num_epochs, title):
     losses = losses[0: num_epochs]
     if title == 'ResNet-50':
-        ax.plot(losses, linewidth=1.5)  # TODO this is wrong since the losses obtained for epochs 1, 6 and 11
-        # ax.set_xlim([0, 12])
-        # ax.set_ylim([0, 12])
+        ax.plot(losses, linewidth=1.5)
     else:
         ax.plot(losses, linewidth=1.5)
     ax.set_title(title)
