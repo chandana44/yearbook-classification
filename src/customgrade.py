@@ -133,7 +133,7 @@ def getModels(dataset, models_checkpoints, use_pretraining=True,
               batch_size=None, num_epochs=10,
               optimizer='sgd', loss='mse',
               initial_epoch=0,
-              sample=0, width=0, height=0):
+              sample=0, width=10, height=10):
     models_architectures_tuples = []
     for model_checkpoint in models_checkpoints:
         architecture = model_checkpoint.split(':')[0]
@@ -304,7 +304,7 @@ if __name__ == "__main__":
         elif args.dataset_type == 'geolocation':
             models_checkpoints = args.ensemble_models.split(
                 ',')  # array of entries of format <architecture>:<checkpoint_file>
-            models_architectures_tuples = getModels(models_checkpoints, use_pretraining=args.use_pretraining,
+            models_architectures_tuples = getModels(args.dataset_type, models_checkpoints, use_pretraining=args.use_pretraining,
                                                     pretrained_weights_path=pretrained_weights_path_map[
                                                         args.model_architecture],
                                                     train_dir=None, val_dir=None,
@@ -313,7 +313,7 @@ if __name__ == "__main__":
                                                     optimizer=args.optimizer, loss=args.loss,
                                                     initial_epoch=1000,
                                                     # Just returning the model without any further training
-                                                    sample=args.sample)
+                                                    sample=args.sample, width=args.width, height=args.height)
 
             if args.type == 'valid':
                 evaluateGeoLocationFromEnsembledModels(models_architectures_tuples, args.sample, args.width, args.height)
