@@ -85,7 +85,7 @@ def evaluateYearbook(predictor):
         image_path = path.join(YEARBOOK_VALID_PATH, image_gr_truth[0])
         pred_year = predictor.predict(image_path)
         truth_year = int(image_gr_truth[1])
-        l1_dist += abs(pred_year[0] - truth_year)
+        l1_dist += abs(pred_year - truth_year)
         count = count + 1
 
     l1_dist /= total_count
@@ -121,7 +121,7 @@ def predictTestYearbook(predictor):
     for image in test_list:
         image_path = path.join(YEARBOOK_TEST_PATH, image[0])
         pred_year = predictor.predict(image_path)
-        out_string = image[0] + '\t' + str(pred_year[0]) + '\n'
+        out_string = image[0] + '\t' + str(pred_year) + '\n'
         output.write(out_string)
     output.close()
 
