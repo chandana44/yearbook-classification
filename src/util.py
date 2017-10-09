@@ -595,7 +595,6 @@ def evaluateGeoLocationFromEnsembledModels(models_architectures_tuples, sample=F
 def testGeoLocationFromEnsembledModels(models_architectures_tuples, sample=False, width=10, height=10):
     test_data = testListStreetView(sample)
     test_images = [path.join(STREETVIEW_TEST_PATH, item[0]) for item in test_data]
-    test_gps = [[float(item[1]), float(item[2])] for item in test_data]
     min_x, max_x, min_y, max_y = get_min_max_xy_geo()
 
     total_count = len(test_data)
@@ -612,7 +611,7 @@ def testGeoLocationFromEnsembledModels(models_architectures_tuples, sample=False
     for (model, architecture) in models_architectures_tuples:
         count = 0
         print(get_time_string() + 'Starting validation for architecture ' + architecture)
-        for x_chunk, y_chunk in chunks(test_images, test_gps, batch_size, architecture):
+        for x_chunk, y_chunk in chunks(test_images, test_data, batch_size, architecture):
             batch_len = len(x_chunk)
             print(get_time_string() + 'Testing ' + str(count + 1) + ' - ' + str(count + batch_size))
             predictions = model.predict(x_chunk)
@@ -621,11 +620,11 @@ def testGeoLocationFromEnsembledModels(models_architectures_tuples, sample=False
             else:
                 int_labels = np.array([np.argmax(p) for p in predictions])
                 xy_coordinates = np.zeros((batch_len, 2))
-                for i in range(batch_len):
-                    int_label = int_labels[i]
+                for j in range(batch_len):
+                    int_label = int_labels[j]
                     x, y = get_xy_from_int_label(width, height, int_label, min_x, max_x, min_y, max_y)
-                    xy_coordinates[i, 0] = x
-                    xy_coordinates[i, 1] = y
+                    xy_coordinates[j, 0] = x
+                    xy_coordinates[j, 1] = y
                 latslongs = XYToCoordinate(xy_coordinates)
 
             mat[count: count + batch_len, :, i] = latslongs
