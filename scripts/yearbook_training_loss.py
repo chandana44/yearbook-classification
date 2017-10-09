@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 
-import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
-import matplotlib
-import sys
 
 matplotlib.rcParams.update({'font.size': 12})
 
@@ -50,12 +48,5 @@ plot_training_loss(ax4, resnet50_losses, 20, 'ResNet-50')
 plot_training_loss(ax5, densenet169_losses, 20, 'DenseNet-169')
 plot_training_loss(ax6, densenet121_losses, 20, 'DenseNet-121')
 
-# plt.text(0, 11, 'GB', weight=550)
-# plt.text(2, 11, 'KOps/s', weight=550)
-# plt.text(-0.1, 6.7, 'KOps/s', weight=550)
-# plt.text(1, 6.7, 'KOps/s', weight=550)
-# plt.text(4, 6, 'KOps/s', weight=550)
-# plt.text(0.55, 2.5, 'KOps/s', weight=550)
-
-plt.savefig("training_loss.png", dpi=100, bbox_inches='tight', pad_inches=0.1)
+plt.savefig("yearbook_training_loss.png", dpi=100, bbox_inches='tight', pad_inches=0.1)
 plt.show()
