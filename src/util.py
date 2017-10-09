@@ -579,11 +579,11 @@ def evaluateGeoLocationFromEnsembledModels(models_architectures_tuples, sample=F
             else:
                 int_labels = np.array([np.argmax(p) for p in predictions])
                 xy_coordinates = np.zeros((batch_len, 2))
-                for i in range(batch_len):
-                    int_label = int_labels[i]
+                for j in range(batch_len):
+                    int_label = int_labels[j]
                     x, y = get_xy_from_int_label(width, height, int_label, min_x, max_x, min_y, max_y)
-                    xy_coordinates[i, 0] = x
-                    xy_coordinates[i, 1] = y
+                    xy_coordinates[j, 0] = x
+                    xy_coordinates[j, 1] = y
                 latslongs = XYToCoordinate(xy_coordinates)
 
             mat[count: count + batch_len, :, i] = latslongs
