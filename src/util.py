@@ -509,6 +509,7 @@ def evaluateYearbookFromEnsembledModelsMultiple(models_map, individual_models_2d
         i = 0
         for model_checkpoint in models_1d:
             mat[:, i] = predictions_map[model_checkpoint]
+            i += 1
         calculate_metrics_over_argmax(mat, total_count, valid_years)
 
 
@@ -548,6 +549,7 @@ def testYearbookFromEnsembledModelsMultiple(models_map, individual_models_2d, sa
         i = 0
         for model_checkpoint in models_1d:
             mat[:, i] = predictions_map[model_checkpoint]
+            i += 1
         test_calculate_metrics_over_argmax(mat, total_count, test_list, test_file_suffix)
 
 
@@ -678,6 +680,10 @@ def test_calculate_metrics_over_argmax(mat, total_count, image_names, test_file_
 
     output_file_close_mean = getYearbookTestOutputFile(test_file_suffix + '--close_mean')
     output_close_mean = open(output_file_close_mean, 'w')
+
+    print(get_time_string() + 'Writing output labels to file: ' + output_file_mean)
+    print(get_time_string() + 'Writing output labels to file: ' + output_file_median)
+    print(get_time_string() + 'Writing output labels to file: ' + output_file_close_mean)
 
     for i in range(total_count):
         m = mat[i, :]  # 1-d array with predictions for a particular image from different architectures
