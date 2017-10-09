@@ -121,7 +121,7 @@ def predictTestYearbook(predictor):
     for image in test_list:
         image_path = path.join(YEARBOOK_TEST_PATH, image[0])
         pred_year = predictor.predict(image_path)
-        out_string = image[0] + '\t' + str(pred_year) + '\n'
+        out_string = image[0] + '\t' + str(int(pred_year)) + '\n'
         output.write(out_string)
     output.close()
 
