@@ -145,7 +145,7 @@ def predictTestStreetview(predictor):
 def getModels(dataset, models_checkpoints, use_pretraining=True,
               pretrained_weights_path=None,
               train_dir=None, val_dir=None, fine_tuning_method=None,
-              batch_size=None, num_epochs=10,
+              batch_size=None, num_epochs=0,
               optimizer='sgd', loss='mse',
               initial_epoch=0,
               sample=0, width=10, height=10):
@@ -196,9 +196,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     models_checkpoints = args.ensemble_models.split(',')
-    models_architectures_tuples = getModels(dataset=args.dataset_type, models_checkpoints=models_checkpoints,
-                                            pretrained_weights_path=pretrained_weights_path_map[
-                                                args.model_architecture])
+    models_architectures_tuples = getModels(dataset=args.dataset_type, models_checkpoints=models_checkpoints)
     predictor = Predictor(args.dataset_type, models_architectures_tuples)
 
     if args.dataset_type == 'yearbook':

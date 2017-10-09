@@ -49,7 +49,7 @@ class Predictor:
             i=0
 
             for (model, architecture) in self.model_architecture_tuples:
-                processed_image = preprocess_image_batch(np.array(image_path),architecture)
+                processed_image = preprocess_image_batch(np.array([image_path]),architecture)
                 prediction = model.predict(processed_image)
                 year = np.array([np.argmax(prediction) + 1900])
                 mat[i] = year
@@ -65,7 +65,7 @@ class Predictor:
             i = 0
 
             for (model, architecture) in self.model_architecture_tuples:
-                processed_image = preprocess_image_batch(np.array(image_path),architecture)
+                processed_image = preprocess_image_batch(np.array([image_path]),architecture)
                 prediction = model.predict(processed_image)
                 if architecture not in CLASSIFICATION_MODELS:
                     latslongs = prediction
