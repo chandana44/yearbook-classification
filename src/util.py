@@ -197,6 +197,7 @@ def drawOnMap(coordinates):
     # This function expects longitude, latitude as arguments
     x, y = BM(coordinates[:, 0], coordinates[:, 1])
     scatter(x, y)
+    plt.savefig('geo_xy.jpg')
     plt.show()
 
 
@@ -533,9 +534,15 @@ def evaluateYearbookFromEnsembledModelsMultipleFromPredictions(predictions_map, 
         calculate_metrics_over_argmax(mat, total_count, valid_years)
 
 
-def testYearbookFromEnsembledModelsMultiple(models_map, individual_models_2d, sample=False):
-    test_list = testListYearbook(sample=sample)
-    test_images = [path.join(YEARBOOK_TEST_PATH, item[0]) for item in test_list]
+def testYearbookFromEnsembledModelsMultiple(models_map, individual_models_2d, sample=False,
+                                            input_file=None, output_file_suffix=None):
+    test_list = testListYearbook(sample=sample, input_file=input_file)
+
+    # Hack
+    if output_file_suffix is not None and 'valid' in output_file_suffix:
+        test_images = [path.join(YEARBOOK_VALID_PATH, item[0]) for item in test_list]
+    else:
+        test_images = [path.join(YEARBOOK_TEST_PATH, item[0]) for item in test_list]
 
     total_count = len(test_images)
     batch_size = 128
@@ -573,8 +580,15 @@ def testYearbookFromEnsembledModelsMultiple(models_map, individual_models_2d, sa
         test_calculate_metrics_over_argmax(mat, total_count, test_list, test_file_suffix)
 
 
-def testYearbookFromEnsembledModelsMultipleFromPredictions(predictions_map, individual_models_2d, sample=False):
-    test_list = testListYearbook(sample=sample)
+def testYearbookFromEnsembledModelsMultipleFromPredictions(predictions_map, individual_models_2d, sample=False,
+                                                           input_file=None, output_file_suffix=None):
+    test_list = testListYearbook(sample=sample, input_file=input_file)
+
+    # Hack
+    if output_file_suffix is not None and 'valid' in output_file_suffix:
+        test_images = [path.join(YEARBOOK_VALID_PATH, item[0]) for item in test_list]
+    else:
+        test_images = [path.join(YEARBOOK_TEST_PATH, item[0]) for item in test_list]
 
     total_count = len(test_list)
     print(get_time_string() + 'Total test data: ' + str(total_count))
@@ -1014,6 +1028,9 @@ def adhoc_testing_geo():
     print(dist_between_points(minx, miny, maxx, maxy))
 
     drawOnMap(train_gps)
+
+
+# adhoc_testing_geo()
 
 # get train and validation data
 # train_data = listStreetView(True, False, False)
