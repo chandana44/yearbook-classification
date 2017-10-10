@@ -754,7 +754,7 @@ def test_calculate_metrics_over_argmax(mat, total_count, image_names, test_file_
         for x in np.nditer(m):
             if abs(x - mean) < mx:
                 mx = abs(x - mean)
-                closest_to_mean = x
+                closest_to_mean = int(x)
 
         out_string = image_names[i][0] + '\t' + str(mean) + '\n'
         output_mean.write(out_string)
