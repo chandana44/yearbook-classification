@@ -594,7 +594,10 @@ def testYearbookFromEnsembledModelsMultipleFromPredictions(predictions_map, indi
     print(get_time_string() + 'Total test data: ' + str(total_count))
 
     for models_1d in individual_models_2d:
-        test_file_suffix = '--'.join(models_1d)
+        models_wo_checkpoint = [e.split(':')[0] for e in models_1d]
+        test_file_suffix = '--'.join(models_wo_checkpoint)
+        if output_file_suffix is not None:
+            test_file_suffix = test_file_suffix + '-' + output_file_suffix
 
         print(get_time_string() + 'Calculating ensembled L1 for the models: ' + str(models_1d))
         # Matrix of predictions where each column corresponds to one architecture
