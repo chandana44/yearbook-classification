@@ -331,7 +331,8 @@ if __name__ == "__main__":
                 elif args.type == 'test':
                     testYearbookFromEnsembledModelsMultipleFromPredictions(predictions_map=predictions_map,
                                                                            individual_models_2d=individual_models_2d,
-                                                                           sample=args.sample)
+                                                                           sample=args.sample,input_file=args.test_file,
+                                                                           output_file_suffix=args.output_suffix)
                     # predictTestYearbookFromModel(trained_model, args.model_architecture, args.sample)
                 else:
                     print(get_time_string() + "Unknown type '%s'", args.type)
