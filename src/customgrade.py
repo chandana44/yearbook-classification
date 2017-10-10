@@ -62,7 +62,12 @@ def getGeolocationTestOutputFile(checkpoint_file):
 def predictTestYearbookFromModel(model, architecture, checkpoint_file, sample=False,
                                  input_file=None, output_file_suffix=None):
     test_list = util.testListYearbook(sample=sample, input_file=input_file)
-    test_images = [path.join(YEARBOOK_TEST_PATH, item[0]) for item in test_list]
+
+    # Hack
+    if output_file_suffix is not None and 'valid' in output_file_suffix:
+        test_images = [path.join(YEARBOOK_VALID_PATH, item[0]) for item in test_list]
+    else:
+        test_images = [path.join(YEARBOOK_TEST_PATH, item[0]) for item in test_list]
 
     total_count = len(test_list)
     print(get_time_string() + "Total test data: ", total_count)
