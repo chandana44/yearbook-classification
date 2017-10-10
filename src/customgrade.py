@@ -59,8 +59,9 @@ def getGeolocationTestOutputFile(checkpoint_file):
 
 
 # Predict label for test data on yearbook dataset
-def predictTestYearbookFromModel(model, architecture, checkpoint_file, sample=False):
-    test_list = util.testListYearbook(sample=sample)
+def predictTestYearbookFromModel(model, architecture, checkpoint_file, sample=False,
+                                 input_file=None, output_file_suffix=None):
+    test_list = util.testListYearbook(sample=sample, input_file=input_file)
     test_images = [path.join(YEARBOOK_TEST_PATH, item[0]) for item in test_list]
 
     total_count = len(test_list)
@@ -69,7 +70,7 @@ def predictTestYearbookFromModel(model, architecture, checkpoint_file, sample=Fa
     batch_size = 128
     count = 0
 
-    output_file = getYearbookTestOutputFile(checkpoint_file)
+    output_file = getYearbookTestOutputFile(checkpoint_file, output_file_suffix)
     output = open(output_file, 'w')
     for x_chunk, image_name_chunk in chunks_test(test_images, test_list, batch_size, architecture):
         print(get_time_string() + 'Testing ' + str(count + 1) + ' - ' + str(count + batch_size))
@@ -261,6 +262,13 @@ if __name__ == "__main__":
                         help="height: number of classes to partition the y-coordinate",
                         required=False, default=20, type=int)
 
+    parser.add_argument("--test_file", dest="test_file",
+                        help="test_file: complete path of test file",
+                        required=False, default=None)
+    parser.add_argument("--output_suffix", dest="output_suffix",
+                        help="output_suffix: optional suffix to add to output labels file",
+                        required=False, default=None)
+
     args = parser.parse_args()
     print('Args provided: ' + str(args))
 
@@ -350,7 +358,8 @@ if __name__ == "__main__":
         if args.type == 'valid':
             evaluateYearbookFromModel(trained_model, args.model_architecture, args.sample)
         elif args.type == 'test':
-            predictTestYearbookFromModel(trained_model, args.model_architecture, args.checkpoint_file_name, args.sample)
+            predictTestYearbookFromModel(trained_model, args.model_architecture, args.checkpoint_file_name, args.sample,
+                                         input_file=args.test_file, output_file_suffix=args.output_suffix)
         else:
             print(get_time_string() + "Unknown type '%s'", args.type)
     elif args.dataset_type == 'geolocation':

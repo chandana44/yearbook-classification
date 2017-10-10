@@ -155,13 +155,15 @@ def listStreetView(train=True, valid=True, sample=False):
     return r
 
 
-def testListYearbook(sample=False):
+def testListYearbook(sample=False, input_file=None):
     r = []
-    prefix = YEARBOOK_TXT_PREFIX
-    if sample:
-        prefix = YEARBOOK_TXT_SAMPLE_PREFIX
+    if input_file is None:
+        prefix = YEARBOOK_TXT_PREFIX
+        if sample:
+            prefix = YEARBOOK_TXT_SAMPLE_PREFIX
+        input_file = prefix + '_test.txt'
 
-    r += [n.strip().split('\t') for n in open(prefix + '_test.txt', 'r')]
+    r += [n.strip().split('\t') for n in open(input_file, 'r')]
     return r
 
 
@@ -658,7 +660,7 @@ def calculate_ensembled_l1_geolocation(mat, total_count, valid_gps):
         mean_l1_dist) + 'median l1 distance' + str(median_l1_dist))
 
 
-def getYearbookTestOutputFile(checkpoint_file):
+def getYearbookTestOutputFile(checkpoint_file, output_file_suffix=None):
     # checkpoint_ext = '.h5'
     # checkpoint_file_wo_ext = checkpoint_file.split(checkpoint_ext)[0]
 
@@ -666,7 +668,10 @@ def getYearbookTestOutputFile(checkpoint_file):
     ext = '.txt'
     output_path_wo_ext = output_path.split(ext)[0]
 
-    return output_path_wo_ext + '-' + checkpoint_file + ext
+    if output_file_suffix is None:
+        return output_path_wo_ext + '-' + checkpoint_file + ext
+
+    return output_path_wo_ext + '-' + checkpoint_file + '-' + output_file_suffix + ext
 
 
 def test_calculate_metrics_over_argmax(mat, total_count, image_names, test_file_suffix):
