@@ -196,6 +196,29 @@ def getModelsMap(individual_models_2d, use_pretraining=True,
     return models_map
 
 
+def getPredictionsMap(predicted_files):
+    """
+
+    :param predicted_files: format - <model:checkpoint>#<file>,<model:checkpoint>#<file> and so on..
+    :return: map of <model:checkpoint> versus predictions
+
+    """
+
+    predictions_map = {}
+
+    for entry in predicted_files.split(','):
+        model_checkpoint = entry.split('#')[0]
+        prediction_file = entry.split('#')[1]
+
+        # Although this method is named testListYearbook, it just reads entries from file name
+        row_list = testListYearbook(input_file=prediction_file)
+        predicted_years = [int(item[1]) for item in row_list]
+
+        predictions_map[model_checkpoint] = predicted_years
+
+    return predictions_map
+
+
 if __name__ == "__main__":
     if is_using_gpu():
         print('Program is using GPU..')
@@ -269,6 +292,10 @@ if __name__ == "__main__":
                         help="output_suffix: optional suffix to add to output labels file",
                         required=False, default=None)
 
+    parser.add_argument("--predicted_files", dest="predicted_files",
+                        help="predicted_files: map of model:checkpoint versus output predictions file",
+                        required=False, default=None)
+
     args = parser.parse_args()
     print('Args provided: ' + str(args))
 
@@ -279,35 +306,39 @@ if __name__ == "__main__":
             raise Exception('ensemble is 1 but no models/checkpoint files specified!')
 
         if args.dataset_type == 'yearbook':
-            models_architectures_tuples_list = []
-            ensembled_models = args.ensemble_models.split(
-                '#')  # array of entires of format <model_checkpoints1>#<model_checkpoints2>
+            if args.predicted_files is not None:
+                predicted_map = getPredictionsMap(args.predicted_files)
 
-            individual_models_2d = []
-            for ensembled_model in ensembled_models:
-                models_checkpoints = ensembled_model.split(
-                    ',')  # array of entries of format <architecture>:<checkpoint_file>
-                individual_models_2d.append(models_checkpoints)
-
-            print(str(individual_models_2d))
-            models_map = getModelsMap(individual_models_2d, use_pretraining=args.use_pretraining,
-                                      pretrained_weights_path=pretrained_weights_path_map[args.model_architecture],
-                                      train_dir=None, val_dir=None,
-                                      fine_tuning_method=args.fine_tuning_method,
-                                      batch_size=args.batch_size, num_epochs=args.num_epochs,
-                                      optimizer=args.optimizer, loss=args.loss,
-                                      initial_epoch=1000,
-                                      # Just returning the model without any further training
-                                      sample=args.sample)
-
-            if args.type == 'valid':
-                evaluateYearbookFromEnsembledModelsMultiple(models_map, individual_models_2d,
-                                                            sample=args.sample)
-            elif args.type == 'test':
-                testYearbookFromEnsembledModelsMultiple(models_map, individual_models_2d, sample=args.sample)
-                # predictTestYearbookFromModel(trained_model, args.model_architecture, args.sample)
             else:
-                print(get_time_string() + "Unknown type '%s'", args.type)
+                models_architectures_tuples_list = []
+                ensembled_models = args.ensemble_models.split(
+                    '#')  # array of entires of format <model_checkpoints1>#<model_checkpoints2>
+
+                individual_models_2d = []
+                for ensembled_model in ensembled_models:
+                    models_checkpoints = ensembled_model.split(
+                        ',')  # array of entries of format <architecture>:<checkpoint_file>
+                    individual_models_2d.append(models_checkpoints)
+
+                print(str(individual_models_2d))
+                models_map = getModelsMap(individual_models_2d, use_pretraining=args.use_pretraining,
+                                          pretrained_weights_path=pretrained_weights_path_map[args.model_architecture],
+                                          train_dir=None, val_dir=None,
+                                          fine_tuning_method=args.fine_tuning_method,
+                                          batch_size=args.batch_size, num_epochs=args.num_epochs,
+                                          optimizer=args.optimizer, loss=args.loss,
+                                          initial_epoch=1000,
+                                          # Just returning the model without any further training
+                                          sample=args.sample)
+
+                if args.type == 'valid':
+                    evaluateYearbookFromEnsembledModelsMultiple(models_map, individual_models_2d,
+                                                                sample=args.sample)
+                elif args.type == 'test':
+                    testYearbookFromEnsembledModelsMultiple(models_map, individual_models_2d, sample=args.sample)
+                    # predictTestYearbookFromModel(trained_model, args.model_architecture, args.sample)
+                else:
+                    print(get_time_string() + "Unknown type '%s'", args.type)
 
         elif args.dataset_type == 'geolocation':
             models_checkpoints = args.ensemble_models.split(

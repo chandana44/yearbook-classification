@@ -515,6 +515,24 @@ def evaluateYearbookFromEnsembledModelsMultiple(models_map, individual_models_2d
         calculate_metrics_over_argmax(mat, total_count, valid_years)
 
 
+def evaluateYearbookFromEnsembledModelsMultipleFromPredictions(predictions_map, individual_models_2d, sample=False):
+    valid_data = listYearbook(False, True, sample)
+    valid_years = [int(item[1]) for item in valid_data]
+
+    total_count = len(valid_data)
+    print(get_time_string() + 'Total validation data: ' + str(total_count))
+
+    for models_1d in individual_models_2d:
+        print(get_time_string() + 'Calculating ensembled L1 for the models: ' + str(models_1d))
+        # Matrix of predictions where each column corresponds to one architecture
+        mat = np.zeros((total_count, len(models_1d)))
+        i = 0
+        for model_checkpoint in models_1d:
+            mat[:, i] = predictions_map[model_checkpoint]
+            i += 1
+        calculate_metrics_over_argmax(mat, total_count, valid_years)
+
+
 def testYearbookFromEnsembledModelsMultiple(models_map, individual_models_2d, sample=False):
     test_list = testListYearbook(sample=sample)
     test_images = [path.join(YEARBOOK_TEST_PATH, item[0]) for item in test_list]
@@ -541,6 +559,25 @@ def testYearbookFromEnsembledModelsMultiple(models_map, individual_models_2d, sa
                     years_full = np.concatenate((years_full, years), axis=0)
                     count += batch_len
                 predictions_map[model_checkpoint] = years_full
+
+    for models_1d in individual_models_2d:
+        test_file_suffix = '--'.join(models_1d)
+
+        print(get_time_string() + 'Calculating ensembled L1 for the models: ' + str(models_1d))
+        # Matrix of predictions where each column corresponds to one architecture
+        mat = np.zeros((total_count, len(models_1d)))
+        i = 0
+        for model_checkpoint in models_1d:
+            mat[:, i] = predictions_map[model_checkpoint]
+            i += 1
+        test_calculate_metrics_over_argmax(mat, total_count, test_list, test_file_suffix)
+
+
+def testYearbookFromEnsembledModelsMultipleFromPredictions(predictions_map, individual_models_2d, sample=False):
+    test_list = testListYearbook(sample=sample)
+
+    total_count = len(test_list)
+    print(get_time_string() + 'Total test data: ' + str(total_count))
 
     for models_1d in individual_models_2d:
         test_file_suffix = '--'.join(models_1d)
