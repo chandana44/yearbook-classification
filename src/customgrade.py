@@ -116,7 +116,8 @@ def predictTestGeoLocationFromModel(model, architecture, checkpoint_file, width,
                 xy_coordinates[i, 1] = y
             coordinates = XYToCoordinate(xy_coordinates)
             for i in range(batch_len):
-                out_string = image_name_chunk[i][0] + '\t' + str(coordinates[i, 0]) + '\t' + str(coordinates[i, 1]) + '\n'
+                out_string = image_name_chunk[i][0] + '\t' + str(coordinates[i, 0]) + '\t' + str(
+                    coordinates[i, 1]) + '\n'
                 output.write(out_string)
         else:  # Regression nets
             latslongs = np.array([[p[0], p[1]] for p in predictions])
@@ -305,22 +306,34 @@ if __name__ == "__main__":
         if args.ensemble_models is None:
             raise Exception('ensemble is 1 but no models/checkpoint files specified!')
 
+        ensembled_models = args.ensemble_models.split(
+            '#')  # array of entires of format <model_checkpoints1>#<model_checkpoints2>
+
+        individual_models_2d = []
+        for ensembled_model in ensembled_models:
+            models_checkpoints = ensembled_model.split(
+                ',')  # array of entries of format <architecture>:<checkpoint_file>
+            individual_models_2d.append(models_checkpoints)
+        print(str(individual_models_2d))
+
         if args.dataset_type == 'yearbook':
             if args.predicted_files is not None:
-                predicted_map = getPredictionsMap(args.predicted_files)
+                predictions_map = getPredictionsMap(args.predicted_files)
+                if args.type == 'valid':
+                    evaluateYearbookFromEnsembledModelsMultipleFromPredictions(predictions_map=predictions_map,
+                                                                               individual_models_2d=individual_models_2d,
+                                                                               sample=args.sample)
+                elif args.type == 'test':
+                    testYearbookFromEnsembledModelsMultipleFromPredictions(predictions_map=predictions_map,
+                                                                           individual_models_2d=individual_models_2d,
+                                                                           sample=args.sample)
+                    # predictTestYearbookFromModel(trained_model, args.model_architecture, args.sample)
+                else:
+                    print(get_time_string() + "Unknown type '%s'", args.type)
 
             else:
                 models_architectures_tuples_list = []
-                ensembled_models = args.ensemble_models.split(
-                    '#')  # array of entires of format <model_checkpoints1>#<model_checkpoints2>
 
-                individual_models_2d = []
-                for ensembled_model in ensembled_models:
-                    models_checkpoints = ensembled_model.split(
-                        ',')  # array of entries of format <architecture>:<checkpoint_file>
-                    individual_models_2d.append(models_checkpoints)
-
-                print(str(individual_models_2d))
                 models_map = getModelsMap(individual_models_2d, use_pretraining=args.use_pretraining,
                                           pretrained_weights_path=pretrained_weights_path_map[args.model_architecture],
                                           train_dir=None, val_dir=None,
@@ -343,7 +356,8 @@ if __name__ == "__main__":
         elif args.dataset_type == 'geolocation':
             models_checkpoints = args.ensemble_models.split(
                 ',')  # array of entries of format <architecture>:<checkpoint_file>
-            models_architectures_tuples = getModels(args.dataset_type, models_checkpoints, use_pretraining=args.use_pretraining,
+            models_architectures_tuples = getModels(args.dataset_type, models_checkpoints,
+                                                    use_pretraining=args.use_pretraining,
                                                     pretrained_weights_path=pretrained_weights_path_map[
                                                         args.model_architecture],
                                                     train_dir=None, val_dir=None,
@@ -355,7 +369,8 @@ if __name__ == "__main__":
                                                     sample=args.sample, width=args.width, height=args.height)
 
             if args.type == 'valid':
-                evaluateGeoLocationFromEnsembledModels(models_architectures_tuples, args.sample, args.width, args.height)
+                evaluateGeoLocationFromEnsembledModels(models_architectures_tuples, args.sample, args.width,
+                                                       args.height)
             elif args.type == 'test':
                 testGeoLocationFromEnsembledModels(models_architectures_tuples, args.sample, args.width, args.height)
             else:
