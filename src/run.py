@@ -55,8 +55,8 @@ class Predictor:
                 mat[i] = year
                 i += 1
 
-            result = np.mean(mat)
-            #result = np.median(mat)
+            #result = np.mean(mat)
+            result = np.median(mat)
         elif self.dataset == 'geolocation':
             min_x, max_x, min_y, max_y = get_min_max_xy_geo()
 
